@@ -25,6 +25,7 @@ const color = new THREE.Color();
 const loader = new GLTFLoader();
 
 
+
 init();
 animate();
 
@@ -150,13 +151,69 @@ function loadModels() {
     "/assets/gltf/animals/Donkey.gltf",
     import.meta.url
   );
+  const deerUrl = new URL(
+    "/assets/gltf/animals/Deer.gltf",
+    import.meta.url
+  );
+  const foxUrl = new URL(
+    "/assets/gltf/animals/Fox.gltf",
+    import.meta.url
+  );
+  const shibaUrl = new URL(
+    "/assets/gltf/animals/ShibaInu.gltf",
+    import.meta.url
+  );
+  const wolfUrl = new URL(
+    "/assets/gltf/animals/Wolf.gltf",
+    import.meta.url
+  );
+  const fenceUrl = new URL(
+    "/assets/glb/PagarKayu.glb",
+    import.meta.url
+  );
 
   loader.load(donkeyUrl.href, function (gltf) {
     const model = gltf.scene;
-    model.position.set(10, 0, 10); 
-    model.scale.set(10, 10, 10); 
+    model.position.set(60,0,-15); 
+    model.scale.set(3, 3, 3); 
+    scene.add(model);
+  });  
+  loader.load(deerUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(15, 0, 10); 
+    model.scale.set(3, 3, 3); 
+    scene.add(model);
+  });  
+  loader.load(foxUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(5, 0, 10); 
+    model.scale.set(3, 3, 3); 
+    scene.add(model);
+  });  
+  loader.load(shibaUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(0, 0, 10); 
+    model.scale.set(3, 3, 3); 
+    scene.add(model);
+  });  
+  loader.load(wolfUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(20, 0, 10); 
+    model.scale.set(3, 3, 3); 
+    scene.add(model);
+  });  
+  loader.load(shibaUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(25, 0, 10); 
+    model.scale.set(3, 3, 3); 
     scene.add(model);
   });
+  loader.load(fenceUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(30, 0, 0); 
+    model.scale.set(5, 5, 5); 
+    scene.add(model);
+  });  
 }
 
 function loadPagar(){
