@@ -1,26 +1,244 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls.js";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+// import { GLBLoader } from "three/examples/jsm/loaders/g";
 
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize( window.innerWidth, window.innerHeight );
-document.body.appendChild( renderer.domElement );
 
-const geometry = new THREE.BoxGeometry( 1, 1, 1 );
-const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-const cube = new THREE.Mesh( geometry, material );
-scene.add( cube );
+let camera, scene, renderer, controls;
 
-camera.position.z = 5;
+const objects = [];
 
-function animate() {
-	requestAnimationFrame( animate );
+let raycaster;
 
-	//cube.rotation.x += 0.01;
-	cube.rotation.y += 0.01;
+let moveForward = false;
+let moveBackward = false;
+let moveLeft = false;
+let moveRight = false;
+let canJump = false;
 
-	renderer.render( scene, camera );
+let prevTime = performance.now();
+const velocity = new THREE.Vector3();
+const direction = new THREE.Vector3();
+const vertex = new THREE.Vector3();
+const color = new THREE.Color();
+const loader = new GLTFLoader();
+
+
+init();
+animate();
+
+function init() {
+  camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    1,
+    1000
+  );
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xffffff);
+  scene.fog = new THREE.Fog(0xffffff, 0, 750);
+
+  const light = new THREE.HemisphereLight(0xeeeeff, 0x777788, 2.5);
+  light.position.set(0.5, 1, 0.75);
+  scene.add(light);
+
+  controls = new PointerLockControls(camera, document.body);
+
+  const blocker = document.getElementById("blocker");
+  const instructions = document.getElementById("instructions");
+
+  instructions.addEventListener("click", function () {
+    controls.lock();
+  });
+
+  controls.addEventListener("lock", function () {
+    instructions.style.display = "none";
+    blocker.style.display = "none";
+  });
+
+  controls.addEventListener("unlock", function () {
+    blocker.style.display = "block";
+    instructions.style.display = "";
+  });
+
+  scene.add(controls.getObject());
+
+  const onKeyDown = function (event) {
+    switch (event.code) {
+      case "ArrowUp":
+      case "KeyW":
+        moveForward = true;
+        break;
+
+      case "ArrowLeft":
+      case "KeyA":
+        moveLeft = true;
+        break;
+
+      case "ArrowDown":
+      case "KeyS":
+        moveBackward = true;
+        break;
+
+      case "ArrowRight":
+      case "KeyD":
+        moveRight = true;
+        break;
+
+      case "Space":
+        if (canJump === true) velocity.y += 350;
+        canJump = false;
+        break;
+    }
+  };
+
+  const onKeyUp = function (event) {
+    switch (event.code) {
+      case "ArrowUp":
+      case "KeyW":
+        moveForward = false;
+        break;
+
+      case "ArrowLeft":
+      case "KeyA":
+        moveLeft = false;
+        break;
+
+      case "ArrowDown":
+      case "KeyS":
+        moveBackward = false;
+        break;
+
+      case "ArrowRight":
+      case "KeyD":
+        moveRight = false;
+        break;
+    }
+  };
+
+  document.addEventListener("keydown", onKeyDown);
+  document.addEventListener("keyup", onKeyUp);
+
+  raycaster = new THREE.Raycaster(
+    new THREE.Vector3(),
+    new THREE.Vector3(0, -1, 0),
+    0,
+    10
+  );
+
+  // floor
+  setFloor();
+
+  // objects
+  loadModels();
+  //
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
+
+  //
+
+  window.addEventListener("resize", onWindowResize);
 }
 
-animate();
+function loadModels() {
+  const donkeyUrl = new URL(
+    "/assets/gltf/animals/Donkey.gltf",
+    import.meta.url
+  );
+
+  loader.load(donkeyUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(10, 0, 10); 
+    model.scale.set(10, 10, 10); 
+    scene.add(model);
+  });
+}
+
+function loadPagar(){
+  const url = new URL(
+    "/assets/glb/Fence_Design_1.glb",
+    import.meta.url
+  );
+}
+
+function setFloor() {
+  let ukuran = 10;
+  let floorGeometry = new THREE.PlaneGeometry(ukuran, ukuran);
+  floorGeometry.rotateX(-Math.PI / 2);
+  const texture = new THREE.TextureLoader().load(
+    `/assets/img/pavingTexture.jpg`
+  );
+  const floorMaterial = new THREE.MeshBasicMaterial({ map: texture });
+
+  let jumlahUbin = 100;
+  let ukuranLantai = ukuran * jumlahUbin;
+  for (let i = -ukuranLantai; i < ukuranLantai; i += ukuran) {
+    for (let j = -ukuranLantai; j < ukuranLantai; j += ukuran) {
+      const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+      scene.add(floor);
+      floor.position.set(i, 0, j);
+    }
+  }
+}
+
+function onWindowResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  const time = performance.now();
+
+  if (controls.isLocked === true) {
+    raycaster.ray.origin.copy(controls.getObject().position);
+    raycaster.ray.origin.y -= 10;
+
+    const intersections = raycaster.intersectObjects(objects, false);
+
+    const onObject = intersections.length > 0;
+
+    const delta = (time - prevTime) / 1000;
+
+    velocity.x -= velocity.x * 10.0 * delta;
+    velocity.z -= velocity.z * 10.0 * delta;
+
+    velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
+
+    direction.z = Number(moveForward) - Number(moveBackward);
+    direction.x = Number(moveRight) - Number(moveLeft);
+    direction.normalize(); // this ensures consistent movements in all directions
+
+    if (moveForward || moveBackward) velocity.z -= direction.z * 400.0 * delta;
+    if (moveLeft || moveRight) velocity.x -= direction.x * 400.0 * delta;
+
+    if (onObject === true) {
+      velocity.y = Math.max(0, velocity.y);
+      canJump = true;
+    }
+
+    controls.moveRight(-velocity.x * delta);
+    controls.moveForward(-velocity.z * delta);
+
+    controls.getObject().position.y += velocity.y * delta; // new behavior
+
+    if (controls.getObject().position.y < 10) {
+      velocity.y = 0;
+      controls.getObject().position.y = 10;
+
+      canJump = true;
+    }
+  }
+
+  prevTime = time;
+
+  renderer.render(scene, camera);
+}
