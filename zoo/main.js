@@ -24,6 +24,8 @@ const vertex = new THREE.Vector3();
 const color = new THREE.Color();
 const loader = new GLTFLoader();
 
+let mixer;
+
 
 
 init();
@@ -178,12 +180,19 @@ function loadModels() {
     model.scale.set(3, 3, 3); 
     scene.add(model);
   });  
+  let deer;
   loader.load(deerUrl.href, function (gltf) {
     const model = gltf.scene;
     model.position.set(15, 0, 10); 
     model.scale.set(3, 3, 3); 
     scene.add(model);
-  });  
+    deer = model;
+    mixer = new THREE.AnimationMixer(model);
+    const clips = gltf.animations;
+    const clip = THREE.AnimationClip.findByName(clips,'Idle_2');
+    const action = mixer.clipAction(clip);
+    action.play();
+    });  
   loader.load(foxUrl.href, function (gltf) {
     const model = gltf.scene;
     model.position.set(5, 0, 10); 
