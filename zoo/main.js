@@ -91,7 +91,7 @@ function init() {
         break;
 
       case "Space":
-        if (canJump === true) velocity.y += 350;
+        if (canJump === true) velocity.y += 200;
         canJump = false;
         break;
     }
@@ -180,19 +180,30 @@ function loadModels() {
     model.scale.set(3, 3, 3); 
     scene.add(model);
   });  
-  let deer;
+  
   loader.load(deerUrl.href, function (gltf) {
     const model = gltf.scene;
     model.position.set(15, 0, 10); 
     model.scale.set(3, 3, 3); 
     scene.add(model);
+    let deer;
     deer = model;
-    mixer = new THREE.AnimationMixer(model);
-    const clips = gltf.animations;
-    const clip = THREE.AnimationClip.findByName(clips,'Idle_2');
-    const action = mixer.clipAction(clip);
-    action.play();
-    });  
+    mixer = new THREE.AnimationMixer(model);const clips = gltf.animations;
+    console.log("Animation clips found in GLTF file:");
+    clips.forEach((clip, index) => {
+        console.log(`Clip ${index + 1}: ${clip.name}`);
+    });
+    
+    const clip = THREE.AnimationClip.findByName(clips,'Idle_2'); // Ensure the animation clip name is correct
+    if (clip) { // Check if the animation clip is found
+        const action = mixer.clipAction(clip);
+        action.loop = THREE.LoopRepeat; // Ensure the animation plays only once
+        action.clampWhenFinished = false; // Clamp the animation when finished
+        action.play();
+    } else {
+        console.error('Animation clip not found!');
+    }
+});  
   loader.load(foxUrl.href, function (gltf) {
     const model = gltf.scene;
     model.position.set(5, 0, 10); 
@@ -237,7 +248,7 @@ function setFloor() {
   let floorGeometry = new THREE.PlaneGeometry(ukuran, ukuran);
   floorGeometry.rotateX(-Math.PI / 2);
   const texture = new THREE.TextureLoader().load(
-    `/assets/img/pavingTexture.jpg`
+    `/assets/img/grassTexture.jpg`
   );
   const floorMaterial = new THREE.MeshBasicMaterial({ map: texture });
 
@@ -291,6 +302,13 @@ function animate() {
       canJump = true;
     }
 
+        // Update animation mixer
+        if (mixer) {
+          mixer.update(delta); // deltaTime is the time elapsed since the last frame
+      }
+  
+      // Render the scene
+      renderer.render(scene, camera);
     controls.moveRight(-velocity.x * delta);
     controls.moveForward(-velocity.z * delta);
 
