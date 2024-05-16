@@ -4,7 +4,6 @@ import { PointerLockControls } from "three/examples/jsm/controls/PointerLockCont
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 // import { GLBLoader } from "three/examples/jsm/loaders/g";
 
-
 let camera, scene, renderer, controls;
 
 const objects = [];
@@ -25,8 +24,6 @@ const color = new THREE.Color();
 const loader = new GLTFLoader();
 
 let mixer;
-
-
 
 init();
 animate();
@@ -137,12 +134,13 @@ function init() {
   // objects
   loadModels();
   //
+  loadBarn();
 
   renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setPixelRatio(window.devicePixelRatio);
+  // renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
-  document.body.appendChild(renderer.domElement);
 
+  document.body.appendChild(renderer.domElement);
   //
 
   window.addEventListener("resize", onWindowResize);
@@ -153,39 +151,24 @@ function loadModels() {
     "/assets/gltf/animals/Donkey.gltf",
     import.meta.url
   );
-  const deerUrl = new URL(
-    "/assets/gltf/animals/Deer.gltf",
-    import.meta.url
-  );
-  const foxUrl = new URL(
-    "/assets/gltf/animals/Fox.gltf",
-    import.meta.url
-  );
+  const deerUrl = new URL("/assets/gltf/animals/Deer.gltf", import.meta.url);
+  const foxUrl = new URL("/assets/gltf/animals/Fox.gltf", import.meta.url);
   const shibaUrl = new URL(
     "/assets/gltf/animals/ShibaInu.gltf",
     import.meta.url
   );
-  const wolfUrl = new URL(
-    "/assets/gltf/animals/Wolf.gltf",
-    import.meta.url
-  );
-  const fenceUrl = new URL(
-    "/assets/glb/PagarKayu.glb",
-    import.meta.url
-  );
+  const wolfUrl = new URL("/assets/gltf/animals/Wolf.gltf", import.meta.url);
+  const fenceUrl = new URL("/assets/glb/PagarKayu.glb", import.meta.url);
   const feedingTrayUrl = new URL(
     "/assets/glb/feedingTray.glb",
     import.meta.url
   );
-  const waterTrayUrl = new URL(
-    "/assets/glb/waterTray.glb",
-    import.meta.url
-  );
+  const waterTrayUrl = new URL("/assets/glb/waterTray.glb", import.meta.url);
 
   loader.load(donkeyUrl.href, function (gltf) {
     const model = gltf.scene;
-    model.position.set(75, 0, -12); 
-    model.scale.set(3, 3, 3); 
+    model.position.set(75, 0, -12);
+    model.scale.set(3, 3, 3);
     model.rotation.y = Math.PI; // Rotate 180 degrees around Y-axis
     scene.add(model);
 
@@ -194,21 +177,22 @@ function loadModels() {
     mixer = new THREE.AnimationMixer(model);
     const clips = gltf.animations;
 
-    const clip = THREE.AnimationClip.findByName(clips,'Eating'); // Ensure the animation clip name is correct
-    if (clip) { // Check if the animation clip is found
-        const action = mixer.clipAction(clip);
-        action.loop = THREE.LoopRepeat; // Ensure the animation plays only once
-        action.clampWhenFinished = true; // Clamp the animation when finished
-        action.play();
+    const clip = THREE.AnimationClip.findByName(clips, "Eating"); // Ensure the animation clip name is correct
+    if (clip) {
+      // Check if the animation clip is found
+      const action = mixer.clipAction(clip);
+      action.loop = THREE.LoopRepeat; // Ensure the animation plays only once
+      action.clampWhenFinished = true; // Clamp the animation when finished
+      action.play();
     } else {
-        console.error('Animation clip not found!');
+      console.error("Animation clip not found!");
     }
-  });  
-  
+  });
+
   loader.load(deerUrl.href, function (gltf) {
     const model = gltf.scene;
-    model.position.set(15, 0, 10); 
-    model.scale.set(3, 3, 3); 
+    model.position.set(15, 0, 10);
+    model.scale.set(3, 3, 3);
     scene.add(model);
     let deer;
     deer = model;
@@ -216,60 +200,61 @@ function loadModels() {
     const clips = gltf.animations;
     console.log("Animation clips found in GLTF file:");
     clips.forEach((clip, index) => {
-        console.log(`Clip ${index + 1}: ${clip.name}`);
+      console.log(`Clip ${index + 1}: ${clip.name}`);
     });
-    
-    const clip = THREE.AnimationClip.findByName(clips,'Idle_2'); // Ensure the animation clip name is correct
-    if (clip) { // Check if the animation clip is found
-        const action = mixer.clipAction(clip);
-        action.loop = THREE.LoopRepeat; // Ensure the animation plays only once
-        action.clampWhenFinished = false; // Clamp the animation when finished
-        action.play();
+
+    const clip = THREE.AnimationClip.findByName(clips, "Idle_2"); // Ensure the animation clip name is correct
+    if (clip) {
+      // Check if the animation clip is found
+      const action = mixer.clipAction(clip);
+      action.loop = THREE.LoopRepeat; // Ensure the animation plays only once
+      action.clampWhenFinished = false; // Clamp the animation when finished
+      action.play();
     } else {
-        console.error('Animation clip not found!');
+      console.error("Animation clip not found!");
     }
-});  
+  });
   loader.load(foxUrl.href, function (gltf) {
     const model = gltf.scene;
-    model.position.set(5, 0, 10); 
-    model.scale.set(3, 3, 3); 
+    model.position.set(5, 0, 10);
+    model.scale.set(3, 3, 3);
     scene.add(model);
-  });  
+  });
   loader.load(shibaUrl.href, function (gltf) {
     const model = gltf.scene;
-    model.position.set(0, 0, 10); 
-    model.scale.set(3, 3, 3); 
+    model.position.set(0, 0, 10);
+    model.scale.set(3, 3, 3);
     scene.add(model);
-  });  
+  });
   loader.load(wolfUrl.href, function (gltf) {
     const model = gltf.scene;
-    model.position.set(20, 0, 10); 
-    model.scale.set(3, 3, 3); 
+    model.position.set(20, 0, 10);
+    model.scale.set(3, 3, 3);
     scene.add(model);
-  });  
+  });
   loader.load(shibaUrl.href, function (gltf) {
     const model = gltf.scene;
-    model.position.set(25, 0, 10); 
-    model.scale.set(3, 3, 3); 
+    model.position.set(25, 0, 10);
+    model.scale.set(3, 3, 3);
     scene.add(model);
   });
   loader.load(fenceUrl.href, function (gltf) {
     const model = gltf.scene;
-    model.position.set(30, 0, 0); 
-    model.scale.set(5, 5, 5); 
+    model.position.set(30, 0, 0);
+    model.scale.set(5, 5, 5);
     scene.add(model);
-  });    
+  });
   loader.load(feedingTrayUrl.href, function (gltf) {
     const model = gltf.scene;
-    model.position.set(75, 0, -22); 
-    model.scale.set(17,17, 17); 
+    model.position.set(75, 0, -22);
+    model.scale.set(17, 17, 17);
     model.rotation.y = Math.PI / 2; // Rotate 90 degrees around Y-axis
     scene.add(model);
-  });   
+  });
   loader.load(waterTrayUrl.href, function (gltf) {
     const model = gltf.scene;
-    model.position.set(50, 0, -22); 
-    model.scale.set(5,5, 5); 
+    model.position.set(50, 0, -22);
+    model.scale.set(5, 5, 5);
     scene.add(model);
   });
 }
@@ -280,6 +265,17 @@ function loadModels() {
 //     import.meta.url
 //   );
 // }
+
+function loadBarn() {
+  const barnUrl = new URL("/assets/gltf/Barn.glb", import.meta.url);
+
+  loader.load(barnUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(50, 0, -50);
+    model.scale.set(5, 5, 5);
+    scene.add(model);
+  });
+}
 
 function setFloor() {
   let ukuran = 10;
@@ -340,13 +336,13 @@ function animate() {
       canJump = true;
     }
 
-        // Update animation mixer
-        if (mixer) {
-          mixer.update(delta); // deltaTime is the time elapsed since the last frame
-      }
-  
-      // Render the scene
-      renderer.render(scene, camera);
+    // Update animation mixer
+    if (mixer) {
+      mixer.update(delta); // deltaTime is the time elapsed since the last frame
+    }
+
+    // Render the scene
+    renderer.render(scene, camera);
     controls.moveRight(-velocity.x * delta);
     controls.moveForward(-velocity.z * delta);
 
