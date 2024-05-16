@@ -173,12 +173,36 @@ function loadModels() {
     "/assets/glb/PagarKayu.glb",
     import.meta.url
   );
+  const feedingTrayUrl = new URL(
+    "/assets/glb/feedingTray.glb",
+    import.meta.url
+  );
+  const waterTrayUrl = new URL(
+    "/assets/glb/waterTray.glb",
+    import.meta.url
+  );
 
   loader.load(donkeyUrl.href, function (gltf) {
     const model = gltf.scene;
-    model.position.set(60,0,-15); 
+    model.position.set(75, 0, -12); 
     model.scale.set(3, 3, 3); 
+    model.rotation.y = Math.PI; // Rotate 180 degrees around Y-axis
     scene.add(model);
+
+    let donkey;
+    donkey = model;
+    mixer = new THREE.AnimationMixer(model);
+    const clips = gltf.animations;
+
+    const clip = THREE.AnimationClip.findByName(clips,'Eating'); // Ensure the animation clip name is correct
+    if (clip) { // Check if the animation clip is found
+        const action = mixer.clipAction(clip);
+        action.loop = THREE.LoopRepeat; // Ensure the animation plays only once
+        action.clampWhenFinished = true; // Clamp the animation when finished
+        action.play();
+    } else {
+        console.error('Animation clip not found!');
+    }
   });  
   
   loader.load(deerUrl.href, function (gltf) {
@@ -188,7 +212,8 @@ function loadModels() {
     scene.add(model);
     let deer;
     deer = model;
-    mixer = new THREE.AnimationMixer(model);const clips = gltf.animations;
+    mixer = new THREE.AnimationMixer(model);
+    const clips = gltf.animations;
     console.log("Animation clips found in GLTF file:");
     clips.forEach((clip, index) => {
         console.log(`Clip ${index + 1}: ${clip.name}`);
@@ -233,15 +258,28 @@ function loadModels() {
     model.position.set(30, 0, 0); 
     model.scale.set(5, 5, 5); 
     scene.add(model);
-  });  
+  });    
+  loader.load(feedingTrayUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(75, 0, -22); 
+    model.scale.set(17,17, 17); 
+    model.rotation.y = Math.PI / 2; // Rotate 90 degrees around Y-axis
+    scene.add(model);
+  });   
+  loader.load(waterTrayUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(50, 0, -22); 
+    model.scale.set(5,5, 5); 
+    scene.add(model);
+  });
 }
 
-function loadPagar(){
-  const url = new URL(
-    "/assets/glb/Fence_Design_1.glb",
-    import.meta.url
-  );
-}
+// function loadPagar(){
+//   const url = new URL(
+//     "/assets/glb/Fence_Design_1.glb",
+//     import.meta.url
+//   );
+// }
 
 function setFloor() {
   let ukuran = 10;
