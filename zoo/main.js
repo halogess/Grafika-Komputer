@@ -181,6 +181,8 @@ loader.load(deerUrl.href, function (gltf) {
   model.scale.set(3, 3, 3); 
   scene.add(model);
 
+  enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
+
   // Create the animation mixer for the deer
   mixer = new THREE.AnimationMixer(model);
   const clips = gltf.animations;
@@ -209,6 +211,7 @@ loader.load(donkeyUrl.href, function (gltf) {
   model.rotation.y = Math.PI; // Rotate 180 degrees around Y-axis
   scene.add(model);
 
+  enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
   // Create the animation mixer for the donkey
   mixerDonkey = new THREE.AnimationMixer(model);
   const clips = gltf.animations;
@@ -235,13 +238,14 @@ loader.load(donkeyUrl.href, function (gltf) {
     model.position.set(60, 0, -14); 
     model.scale.set(2,2, 2); 
     scene.add(model);
-
+    enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
   });  
   loader.load(donkeyUrl.href, function (gltf) {
     const model = gltf.scene;
     model.position.set(50, 0, -14); 
     model.scale.set(2.5, 2.5, 2.5); 
     scene.add(model);
+    enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
   });  
 
   loader.load(shibaUrl.href, function (gltf) {
@@ -249,18 +253,21 @@ loader.load(donkeyUrl.href, function (gltf) {
     model.position.set(0, 0, 10); 
     model.scale.set(3, 3, 3); 
     scene.add(model);
+    enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
   });  
   loader.load(wolfUrl.href, function (gltf) {
     const model = gltf.scene;
     model.position.set(20, 0, 10); 
     model.scale.set(3, 3, 3); 
     scene.add(model);
+    enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
   });  
   loader.load(shibaUrl.href, function (gltf) {
     const model = gltf.scene;
     model.position.set(25, 0, 10); 
     model.scale.set(3, 3, 3); 
     scene.add(model);
+    enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
   });
 }
 
@@ -283,6 +290,7 @@ const waterTrayUrl = new URL(
     model.position.set(30, 0, 0); 
     model.scale.set(5, 5, 5); 
     scene.add(model);
+    enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
   });    
   loader.load(feedingTrayUrl.href, function (gltf) {
     const model = gltf.scene;
@@ -290,12 +298,14 @@ const waterTrayUrl = new URL(
     model.scale.set(17,17, 17); 
     model.rotation.y = Math.PI / 2; // Rotate 90 degrees around Y-axis
     scene.add(model);
+    enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
   });   
   loader.load(waterTrayUrl.href, function (gltf) {
     const model = gltf.scene;
     model.position.set(50, 0, -22); 
     model.scale.set(5,5, 5); 
     scene.add(model);
+    enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
   });
 }
 
@@ -380,5 +390,13 @@ function animate() {
   prevTime = time;
 
   renderer.render(scene, camera);
+}
+
+function enableBackfaceCullingForModel(model) {
+  model.traverse((child) => {
+    if (child.isMesh) {
+      child.material.side = THREE.FrontSide;
+    }
+  });
 }
 
