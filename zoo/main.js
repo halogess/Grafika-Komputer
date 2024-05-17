@@ -4,6 +4,7 @@ import { PointerLockControls } from "three/examples/jsm/controls/PointerLockCont
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 // import { GLBLoader } from "three/examples/jsm/loaders/g";
 
+
 let camera, scene, renderer, controls;
 
 const objects = [];
@@ -24,6 +25,10 @@ const color = new THREE.Color();
 const loader = new GLTFLoader();
 
 let mixer;
+let mixerDonkey;
+
+
+
 
 init();
 animate();
@@ -133,14 +138,15 @@ function init() {
 
   // objects
   loadModels();
-  //
-  loadBarn();
+
+  // properties
+  loadProp();
 
   renderer = new THREE.WebGLRenderer({ antialias: true });
-  // renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
-
   document.body.appendChild(renderer.domElement);
+
   //
 
   window.addEventListener("resize", onWindowResize);
@@ -151,128 +157,144 @@ function loadModels() {
     "/assets/gltf/animals/Donkey.gltf",
     import.meta.url
   );
-  const deerUrl = new URL("/assets/gltf/animals/Deer.gltf", import.meta.url);
-  const foxUrl = new URL("/assets/gltf/animals/Fox.gltf", import.meta.url);
+  const deerUrl = new URL(
+    "/assets/gltf/animals/Deer.gltf",
+    import.meta.url
+  );
+  const foxUrl = new URL(
+    "/assets/gltf/animals/Fox.gltf",
+    import.meta.url
+  );
   const shibaUrl = new URL(
     "/assets/gltf/animals/ShibaInu.gltf",
     import.meta.url
   );
-  const wolfUrl = new URL("/assets/gltf/animals/Wolf.gltf", import.meta.url);
-  const fenceUrl = new URL("/assets/glb/PagarKayu.glb", import.meta.url);
-  const feedingTrayUrl = new URL(
-    "/assets/glb/feedingTray.glb",
+  const wolfUrl = new URL(
+    "/assets/gltf/animals/Wolf.gltf",
     import.meta.url
   );
-  const waterTrayUrl = new URL("/assets/glb/waterTray.glb", import.meta.url);
+  
+// Load the deer model and create its mixer
+loader.load(deerUrl.href, function (gltf) {
+  const model = gltf.scene;
+  model.position.set(15, 0, 10); 
+  model.scale.set(3, 3, 3); 
+  scene.add(model);
+
+  // Create the animation mixer for the deer
+  mixer = new THREE.AnimationMixer(model);
+  const clips = gltf.animations;
+
+  console.log("Animation clips found in GLTF file (Deer):");
+  clips.forEach((clip, index) => {
+    console.log(`Clip ${index + 1}: ${clip.name}`);
+  });
+
+  // Find and play the 'Idle_2' animation
+  const idleClip = THREE.AnimationClip.findByName(clips, 'Idle_2');
+  if (idleClip) {
+    const action = mixer.clipAction(idleClip);
+    action.loop = THREE.LoopRepeat;
+    action.play();
+  } else {
+    console.error('Idle_2 animation clip not found for Deer!');
+  }
+});
+
+// Load the donkey model and create its mixer
+loader.load(donkeyUrl.href, function (gltf) {
+  const model = gltf.scene;
+  model.position.set(75, 0, -14); 
+  model.scale.set(3, 3, 3); 
+  model.rotation.y = Math.PI; // Rotate 180 degrees around Y-axis
+  scene.add(model);
+
+  // Create the animation mixer for the donkey
+  mixerDonkey = new THREE.AnimationMixer(model);
+  const clips = gltf.animations;
+
+  console.log("Animation clips found in GLTF file (Donkey):");
+  clips.forEach((clip, index) => {
+    console.log(`Clip ${index + 1}: ${clip.name}`);
+  });
+
+  // Find and play the 'Eating' animation
+  const eatingClip = THREE.AnimationClip.findByName(clips, 'Eating');
+  if (eatingClip) {
+    const action = mixerDonkey.clipAction(eatingClip);
+    action.loop = THREE.LoopRepeat;
+    action.clampWhenFinished = true;
+    action.play();
+  } else {
+    console.error('Eating animation clip not found for Donkey!');
+  }
+});
 
   loader.load(donkeyUrl.href, function (gltf) {
     const model = gltf.scene;
-    model.position.set(75, 0, -12);
-    model.scale.set(3, 3, 3);
-    model.rotation.y = Math.PI; // Rotate 180 degrees around Y-axis
+    model.position.set(60, 0, -14); 
+    model.scale.set(2,2, 2); 
     scene.add(model);
 
-    let donkey;
-    donkey = model;
-    mixer = new THREE.AnimationMixer(model);
-    const clips = gltf.animations;
-
-    const clip = THREE.AnimationClip.findByName(clips, "Eating"); // Ensure the animation clip name is correct
-    if (clip) {
-      // Check if the animation clip is found
-      const action = mixer.clipAction(clip);
-      action.loop = THREE.LoopRepeat; // Ensure the animation plays only once
-      action.clampWhenFinished = true; // Clamp the animation when finished
-      action.play();
-    } else {
-      console.error("Animation clip not found!");
-    }
-  });
-
-  loader.load(deerUrl.href, function (gltf) {
+  });  
+  loader.load(donkeyUrl.href, function (gltf) {
     const model = gltf.scene;
-    model.position.set(15, 0, 10);
-    model.scale.set(3, 3, 3);
+    model.position.set(50, 0, -14); 
+    model.scale.set(2.5, 2.5, 2.5); 
     scene.add(model);
-    let deer;
-    deer = model;
-    mixer = new THREE.AnimationMixer(model);
-    const clips = gltf.animations;
-    console.log("Animation clips found in GLTF file:");
-    clips.forEach((clip, index) => {
-      console.log(`Clip ${index + 1}: ${clip.name}`);
-    });
+  });  
 
-    const clip = THREE.AnimationClip.findByName(clips, "Idle_2"); // Ensure the animation clip name is correct
-    if (clip) {
-      // Check if the animation clip is found
-      const action = mixer.clipAction(clip);
-      action.loop = THREE.LoopRepeat; // Ensure the animation plays only once
-      action.clampWhenFinished = false; // Clamp the animation when finished
-      action.play();
-    } else {
-      console.error("Animation clip not found!");
-    }
-  });
-  loader.load(foxUrl.href, function (gltf) {
-    const model = gltf.scene;
-    model.position.set(5, 0, 10);
-    model.scale.set(3, 3, 3);
-    scene.add(model);
-  });
   loader.load(shibaUrl.href, function (gltf) {
     const model = gltf.scene;
-    model.position.set(0, 0, 10);
-    model.scale.set(3, 3, 3);
+    model.position.set(0, 0, 10); 
+    model.scale.set(3, 3, 3); 
     scene.add(model);
-  });
+  });  
   loader.load(wolfUrl.href, function (gltf) {
     const model = gltf.scene;
-    model.position.set(20, 0, 10);
-    model.scale.set(3, 3, 3);
+    model.position.set(20, 0, 10); 
+    model.scale.set(3, 3, 3); 
     scene.add(model);
-  });
+  });  
   loader.load(shibaUrl.href, function (gltf) {
     const model = gltf.scene;
-    model.position.set(25, 0, 10);
-    model.scale.set(3, 3, 3);
-    scene.add(model);
-  });
-  loader.load(fenceUrl.href, function (gltf) {
-    const model = gltf.scene;
-    model.position.set(30, 0, 0);
-    model.scale.set(5, 5, 5);
-    scene.add(model);
-  });
-  loader.load(feedingTrayUrl.href, function (gltf) {
-    const model = gltf.scene;
-    model.position.set(75, 0, -22);
-    model.scale.set(17, 17, 17);
-    model.rotation.y = Math.PI / 2; // Rotate 90 degrees around Y-axis
-    scene.add(model);
-  });
-  loader.load(waterTrayUrl.href, function (gltf) {
-    const model = gltf.scene;
-    model.position.set(50, 0, -22);
-    model.scale.set(5, 5, 5);
+    model.position.set(25, 0, 10); 
+    model.scale.set(3, 3, 3); 
     scene.add(model);
   });
 }
 
-// function loadPagar(){
-//   const url = new URL(
-//     "/assets/glb/Fence_Design_1.glb",
-//     import.meta.url
-//   );
-// }
+function loadProp(){  
+  const fenceUrl = new URL(
+  "/assets/glb/PagarKayu.glb",
+  import.meta.url
+);
+const feedingTrayUrl = new URL(
+  "/assets/glb/feedingTray.glb",
+  import.meta.url
+);
+const waterTrayUrl = new URL(
+  "/assets/glb/waterTray.glb",
+  import.meta.url
+);
 
-function loadBarn() {
-  const barnUrl = new URL("/assets/gltf/Barn.glb", import.meta.url);
-
-  loader.load(barnUrl.href, function (gltf) {
+  loader.load(fenceUrl.href, function (gltf) {
     const model = gltf.scene;
-    model.position.set(50, 0, -50);
-    model.scale.set(5, 5, 5);
+    model.position.set(30, 0, 0); 
+    model.scale.set(5, 5, 5); 
+    scene.add(model);
+  });    
+  loader.load(feedingTrayUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(75, 0, -22); 
+    model.scale.set(17,17, 17); 
+    model.rotation.y = Math.PI / 2; // Rotate 90 degrees around Y-axis
+    scene.add(model);
+  });   
+  loader.load(waterTrayUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(50, 0, -22); 
+    model.scale.set(5,5, 5); 
     scene.add(model);
   });
 }
@@ -314,14 +336,12 @@ function animate() {
     raycaster.ray.origin.y -= 10;
 
     const intersections = raycaster.intersectObjects(objects, false);
-
     const onObject = intersections.length > 0;
 
     const delta = (time - prevTime) / 1000;
 
     velocity.x -= velocity.x * 10.0 * delta;
     velocity.z -= velocity.z * 10.0 * delta;
-
     velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
 
     direction.z = Number(moveForward) - Number(moveBackward);
@@ -336,13 +356,15 @@ function animate() {
       canJump = true;
     }
 
-    // Update animation mixer
+    // Update animation mixers
     if (mixer) {
-      mixer.update(delta); // deltaTime is the time elapsed since the last frame
+      mixer.update(delta); // Update the deer's animation mixer
+    }
+    if (mixerDonkey) {
+      mixerDonkey.update(delta); // Update the donkey's animation mixer
     }
 
-    // Render the scene
-    renderer.render(scene, camera);
+    // Move controls
     controls.moveRight(-velocity.x * delta);
     controls.moveForward(-velocity.z * delta);
 
@@ -351,7 +373,6 @@ function animate() {
     if (controls.getObject().position.y < 10) {
       velocity.y = 0;
       controls.getObject().position.y = 10;
-
       canJump = true;
     }
   }
@@ -360,3 +381,4 @@ function animate() {
 
   renderer.render(scene, camera);
 }
+
