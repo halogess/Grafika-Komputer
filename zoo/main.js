@@ -292,6 +292,10 @@ const barnUrl = new URL(
   "/assets/glb/Barn.glb",
   import.meta.url
 );
+const windTurbineUrl = new URL(
+  "/assets/glb//windTurbine_new.glb",
+  import.meta.url
+);
 
   loader.load(fenceUrl.href, function (gltf) {
     const model = gltf.scene;
@@ -319,6 +323,13 @@ const barnUrl = new URL(
     const model = gltf.scene;
     model.position.set(130, 0, -25); 
     model.scale.set(5,5, 5); 
+    scene.add(model);
+    enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
+  });
+  loader.load(windTurbineUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(160, 0, -25); 
+    model.scale.set(3,3, 3); 
     scene.add(model);
     enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
   });
