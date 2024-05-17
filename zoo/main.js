@@ -4,7 +4,6 @@ import { PointerLockControls } from "three/examples/jsm/controls/PointerLockCont
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 // import { GLBLoader } from "three/examples/jsm/loaders/g";
 
-
 let camera, scene, renderer, controls;
 
 const objects = [];
@@ -26,9 +25,7 @@ const loader = new GLTFLoader();
 
 let mixer;
 let mixerDonkey;
-
-
-
+let mixerShiba;
 
 init();
 animate();
@@ -210,16 +207,11 @@ loader.load(donkeyUrl.href, function (gltf) {
   model.scale.set(3, 3, 3); 
   model.rotation.y = Math.PI; // Rotate 180 degrees around Y-axis
   scene.add(model);
+  enableBackfaceCullingForModel(model); // Enable backface culling for the donkey model
 
-  enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
   // Create the animation mixer for the donkey
   mixerDonkey = new THREE.AnimationMixer(model);
   const clips = gltf.animations;
-
-  console.log("Animation clips found in GLTF file (Donkey):");
-  clips.forEach((clip, index) => {
-    console.log(`Clip ${index + 1}: ${clip.name}`);
-  });
 
   // Find and play the 'Eating' animation
   const eatingClip = THREE.AnimationClip.findByName(clips, 'Eating');
@@ -240,6 +232,7 @@ loader.load(donkeyUrl.href, function (gltf) {
     scene.add(model);
     enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
   });  
+
   loader.load(donkeyUrl.href, function (gltf) {
     const model = gltf.scene;
     model.position.set(50, 0, -14); 
@@ -248,13 +241,31 @@ loader.load(donkeyUrl.href, function (gltf) {
     enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
   });  
 
-  loader.load(shibaUrl.href, function (gltf) {
-    const model = gltf.scene;
-    model.position.set(0, 0, 10); 
-    model.scale.set(3, 3, 3); 
-    scene.add(model);
-    enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
-  });  
+ // Load the shiba model and create its mixer
+loader.load(shibaUrl.href, function (gltf) {
+  const model = gltf.scene;
+  model.position.set(0, 0, 10); 
+  model.scale.set(2.5, 2.5, 2.5); 
+  scene.add(model);
+  enableBackfaceCullingForModel(model); // Enable backface culling for the shiba model
+
+  // Create the animation mixer for the shiba
+  mixerShiba = new THREE.AnimationMixer(model);
+  const clips = gltf.animations;
+
+  // Find and play the 'Walk' animation
+  const walkClip = THREE.AnimationClip.findByName(clips, 'Walk');
+  if (walkClip) {
+    walkRandomDirection(model, mixerShiba, walkClip);
+    const action = mixerShiba.clipAction(walkClip);
+    action.loop = THREE.LoopRepeat;
+    action.clampWhenFinished = true;
+    action.play();
+  } else {
+    console.error('Walk animation clip not found for Shiba!');
+  }
+});
+
   loader.load(wolfUrl.href, function (gltf) {
     const model = gltf.scene;
     model.position.set(20, 0, 10); 
@@ -262,13 +273,6 @@ loader.load(donkeyUrl.href, function (gltf) {
     scene.add(model);
     enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
   });  
-  loader.load(shibaUrl.href, function (gltf) {
-    const model = gltf.scene;
-    model.position.set(25, 0, 10); 
-    model.scale.set(3, 3, 3); 
-    scene.add(model);
-    enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
-  });
 }
 
 function loadProp(){  
@@ -282,6 +286,10 @@ const feedingTrayUrl = new URL(
 );
 const waterTrayUrl = new URL(
   "/assets/glb/waterTray.glb",
+  import.meta.url
+);
+const barnUrl = new URL(
+  "/assets/glb/Barn.glb",
   import.meta.url
 );
 
@@ -303,6 +311,13 @@ const waterTrayUrl = new URL(
   loader.load(waterTrayUrl.href, function (gltf) {
     const model = gltf.scene;
     model.position.set(50, 0, -22); 
+    model.scale.set(5,5, 5); 
+    scene.add(model);
+    enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
+  });
+  loader.load(barnUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(130, 0, -25); 
     model.scale.set(5,5, 5); 
     scene.add(model);
     enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
@@ -372,6 +387,9 @@ function animate() {
     }
     if (mixerDonkey) {
       mixerDonkey.update(delta); // Update the donkey's animation mixer
+    }    
+    if (mixerShiba) {
+      mixerShiba.update(delta); // Update the shiba's animation mixer
     }
 
     // Move controls
@@ -400,3 +418,45 @@ function enableBackfaceCullingForModel(model) {
   });
 }
 
+function walkRandomDirection(model, mixer, clip) {
+  // Generate a random direction
+  const randomDirection = new THREE.Vector3(
+    Math.random() * 2 - 1, // Random x direction between -1 and 1
+    0, // Keep y direction constant (no vertical movement)
+    Math.random() * 2 - 1 // Random z direction between -1 and 1
+  ).normalize(); // Normalize to ensure consistent movement speed
+
+  // Set the model's rotation to face the random direction
+  const angle = Math.atan2(randomDirection.x, randomDirection.z);
+  model.rotation.y = angle;
+
+  // Play the animation
+  if (mixer) {
+    const action = mixer.clipAction(clip);
+    action.loop = THREE.LoopRepeat; // Ensure the animation loops
+    action.clampWhenFinished = true;
+    action.play();
+
+    // Move the model in the random direction
+    const move = () => {
+      model.position.x += randomDirection.x * 0.3; // Adjust speed as necessary
+      model.position.z += randomDirection.z * 0.3; // Adjust speed as necessary
+
+      // Check constraints and stop movement if out of bounds
+      if (model.position.x > 120 || model.position.x < -30) {
+        // Adjust position to stay within bounds
+        model.position.x = Math.min(Math.max(model.position.x, -30), 120);
+        // Generate a new random direction
+        walkRandomDirection(model, mixer, clip);
+      } else {
+        // Continue moving
+        requestAnimationFrame(move);
+      }
+    };
+
+    // Start the movement
+    move();
+  } else {
+    console.error('Animation mixer not initialized!');
+  }
+}
