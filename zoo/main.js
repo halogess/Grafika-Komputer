@@ -144,8 +144,6 @@ function init() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
-  //
-
   window.addEventListener("resize", onWindowResize);
 }
 
@@ -154,189 +152,208 @@ function loadModels() {
     "/assets/gltf/animals/Donkey.gltf",
     import.meta.url
   );
-  const deerUrl = new URL(
-    "/assets/gltf/animals/Deer.gltf",
-    import.meta.url
-  );
-  const foxUrl = new URL(
-    "/assets/gltf/animals/Fox.gltf",
-    import.meta.url
-  );
+  const deerUrl = new URL("/assets/gltf/animals/Deer.gltf", import.meta.url);
+  const foxUrl = new URL("/assets/gltf/animals/Fox.gltf", import.meta.url);
   const shibaUrl = new URL(
     "/assets/gltf/animals/ShibaInu.gltf",
     import.meta.url
   );
-  const wolfUrl = new URL(
-    "/assets/gltf/animals/Wolf.gltf",
-    import.meta.url
-  );
-  
-// Load the deer model and create its mixer
-loader.load(deerUrl.href, function (gltf) {
-  const model = gltf.scene;
-  model.position.set(15, 0, 10); 
-  model.scale.set(3, 3, 3); 
-  scene.add(model);
+  const wolfUrl = new URL("/assets/gltf/animals/Wolf.gltf", import.meta.url);
 
-  enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
+  // Load the deer model and create its mixer
+  loader.load(deerUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(15, 0, 10);
+    model.scale.set(3, 3, 3);
+    scene.add(model);
 
-  // Create the animation mixer for the deer
-  mixer = new THREE.AnimationMixer(model);
-  const clips = gltf.animations;
+    enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
 
-  console.log("Animation clips found in GLTF file (Deer):");
-  clips.forEach((clip, index) => {
-    console.log(`Clip ${index + 1}: ${clip.name}`);
+    // Create the animation mixer for the deer
+    mixer = new THREE.AnimationMixer(model);
+    const clips = gltf.animations;
+
+    console.log("Animation clips found in GLTF file (Deer):");
+    clips.forEach((clip, index) => {
+      console.log(`Clip ${index + 1}: ${clip.name}`);
+    });
+
+    // Find and play the 'Idle_2' animation
+    const idleClip = THREE.AnimationClip.findByName(clips, "Idle_2");
+    if (idleClip) {
+      const action = mixer.clipAction(idleClip);
+      action.loop = THREE.LoopRepeat;
+      action.play();
+    } else {
+      console.error("Idle_2 animation clip not found for Deer!");
+    }
+
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+    // alert(objects.length);
   });
 
-  // Find and play the 'Idle_2' animation
-  const idleClip = THREE.AnimationClip.findByName(clips, 'Idle_2');
-  if (idleClip) {
-    const action = mixer.clipAction(idleClip);
-    action.loop = THREE.LoopRepeat;
-    action.play();
-  } else {
-    console.error('Idle_2 animation clip not found for Deer!');
-  }
-});
+  // Load the donkey model and create its mixer
+  loader.load(donkeyUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(75, 0, -14);
+    model.scale.set(3, 3, 3);
+    model.rotation.y = Math.PI; // Rotate 180 degrees around Y-axis
+    scene.add(model);
+    enableBackfaceCullingForModel(model); // Enable backface culling for the donkey model
 
-// Load the donkey model and create its mixer
-loader.load(donkeyUrl.href, function (gltf) {
-  const model = gltf.scene;
-  model.position.set(75, 0, -14); 
-  model.scale.set(3, 3, 3); 
-  model.rotation.y = Math.PI; // Rotate 180 degrees around Y-axis
-  scene.add(model);
-  enableBackfaceCullingForModel(model); // Enable backface culling for the donkey model
+    // Create the animation mixer for the donkey
+    mixerDonkey = new THREE.AnimationMixer(model);
+    const clips = gltf.animations;
 
-  // Create the animation mixer for the donkey
-  mixerDonkey = new THREE.AnimationMixer(model);
-  const clips = gltf.animations;
+    // Find and play the 'Eating' animation
+    const eatingClip = THREE.AnimationClip.findByName(clips, "Eating");
+    if (eatingClip) {
+      const action = mixerDonkey.clipAction(eatingClip);
+      action.loop = THREE.LoopRepeat;
+      action.clampWhenFinished = true;
+      action.play();
+    } else {
+      console.error("Eating animation clip not found for Donkey!");
+    }
 
-  // Find and play the 'Eating' animation
-  const eatingClip = THREE.AnimationClip.findByName(clips, 'Eating');
-  if (eatingClip) {
-    const action = mixerDonkey.clipAction(eatingClip);
-    action.loop = THREE.LoopRepeat;
-    action.clampWhenFinished = true;
-    action.play();
-  } else {
-    console.error('Eating animation clip not found for Donkey!');
-  }
-});
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
 
   loader.load(donkeyUrl.href, function (gltf) {
     const model = gltf.scene;
-    model.position.set(60, 0, -14); 
-    model.scale.set(2,2, 2); 
+    model.position.set(60, 0, -14);
+    model.scale.set(2, 2, 2);
     scene.add(model);
-    enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
-  });  
+    enableBackfaceCullingForModel(model);
+
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
 
   loader.load(donkeyUrl.href, function (gltf) {
     const model = gltf.scene;
-    model.position.set(50, 0, -14); 
-    model.scale.set(2.5, 2.5, 2.5); 
+    model.position.set(50, 0, -14);
+    model.scale.set(2.5, 2.5, 2.5);
     scene.add(model);
-    enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
-  });  
+    enableBackfaceCullingForModel(model); 
 
- // Load the shiba model and create its mixer
-loader.load(shibaUrl.href, function (gltf) {
-  const model = gltf.scene;
-  model.position.set(0, 0, 10); 
-  model.scale.set(2.5, 2.5, 2.5); 
-  scene.add(model);
-  enableBackfaceCullingForModel(model); // Enable backface culling for the shiba model
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
 
-  // Create the animation mixer for the shiba
-  mixerShiba = new THREE.AnimationMixer(model);
-  const clips = gltf.animations;
+  // Load the shiba model and create its mixer
+  loader.load(shibaUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(0, 0, 10);
+    model.scale.set(2.5, 2.5, 2.5);
+    scene.add(model);
+    enableBackfaceCullingForModel(model); // Enable backface culling for the shiba model
 
-  // Find and play the 'Walk' animation
-  const walkClip = THREE.AnimationClip.findByName(clips, 'Walk');
-  if (walkClip) {
-    walkRandomDirection(model, mixerShiba, walkClip);
-    const action = mixerShiba.clipAction(walkClip);
-    action.loop = THREE.LoopRepeat;
-    action.clampWhenFinished = true;
-    action.play();
-  } else {
-    console.error('Walk animation clip not found for Shiba!');
-  }
-});
+    // Create the animation mixer for the shiba
+    mixerShiba = new THREE.AnimationMixer(model);
+    const clips = gltf.animations;
+
+    // Find and play the 'Walk' animation
+    const walkClip = THREE.AnimationClip.findByName(clips, "Walk");
+    if (walkClip) {
+      walkRandomDirection(model, mixerShiba, walkClip);
+      const action = mixerShiba.clipAction(walkClip);
+      action.loop = THREE.LoopRepeat;
+      action.clampWhenFinished = true;
+      action.play();
+    } else {
+      console.error("Walk animation clip not found for Shiba!");
+    }
+
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
 
   loader.load(wolfUrl.href, function (gltf) {
     const model = gltf.scene;
-    model.position.set(20, 0, 10); 
-    model.scale.set(3, 3, 3); 
+    model.position.set(20, 0, 10);
+    model.scale.set(3, 3, 3);
     scene.add(model);
-    enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
-  });  
+    enableBackfaceCullingForModel(model);
+
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
 }
 
-function loadProp(){  
-  const fenceUrl = new URL(
-  "/assets/glb/PagarKayu.glb",
-  import.meta.url
-);
-const feedingTrayUrl = new URL(
-  "/assets/glb/feedingTray.glb",
-  import.meta.url
-);
-const waterTrayUrl = new URL(
-  "/assets/glb/waterTray.glb",
-  import.meta.url
-);
-const barnUrl = new URL(
-  "/assets/glb/Barn.glb",
-  import.meta.url
-);
-const windTurbineUrl = new URL(
-  "/assets/glb//windTurbine_new.glb",
-  import.meta.url
-);
+function loadProp() {
+  const fenceUrl = new URL("/assets/glb/PagarKayu.glb", import.meta.url);
+  const feedingTrayUrl = new URL(
+    "/assets/glb/feedingTray.glb",
+    import.meta.url
+  );
+  const waterTrayUrl = new URL("/assets/glb/waterTray.glb", import.meta.url);
+  const barnUrl = new URL("/assets/glb/Barn.glb", import.meta.url);
+  const windTurbineUrl = new URL(
+    "/assets/glb//windTurbine_new.glb",
+    import.meta.url
+  );
 
   loader.load(fenceUrl.href, function (gltf) {
     const model = gltf.scene;
-    model.position.set(30, 0, 0); 
-    model.scale.set(5, 5, 5); 
+    model.position.set(30, 0, 0);
+    model.scale.set(5, 5, 5);
     scene.add(model);
     enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
-  });    
+  });
   loader.load(feedingTrayUrl.href, function (gltf) {
     const model = gltf.scene;
-    model.position.set(75, 0, -22); 
-    model.scale.set(17,17, 17); 
+    model.position.set(75, 0, -22);
+    model.scale.set(17, 17, 17);
     model.rotation.y = Math.PI / 2; // Rotate 90 degrees around Y-axis
     scene.add(model);
     enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
-  });   
+  });
   loader.load(waterTrayUrl.href, function (gltf) {
     const model = gltf.scene;
-    model.position.set(50, 0, -22); 
-    model.scale.set(5,5, 5); 
+    model.position.set(50, 0, -22);
+    model.scale.set(5, 5, 5);
     scene.add(model);
     enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
   });
   loader.load(barnUrl.href, function (gltf) {
     const model = gltf.scene;
-    model.position.set(130, 0, -25); 
-    model.scale.set(5,5, 5); 
+    model.position.set(130, 0, -25);
+    model.scale.set(5, 5, 5);
     scene.add(model);
-    enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
+    enableBackfaceCullingForModel(model);
   });
   loader.load(windTurbineUrl.href, function (gltf) {
     const model = gltf.scene;
-    model.position.set(160, 0, -25); 
-    model.scale.set(3,3, 3); 
+    model.position.set(160, 0, -25);
+    model.scale.set(3, 3, 3);
     scene.add(model);
     enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
   });
 }
 
 function setFloor() {
-  let ukuran = 10;
+  let ukuran = 20;
   let floorGeometry = new THREE.PlaneGeometry(ukuran, ukuran);
   floorGeometry.rotateX(-Math.PI / 2);
   const texture = new THREE.TextureLoader().load(
@@ -398,7 +415,7 @@ function animate() {
     }
     if (mixerDonkey) {
       mixerDonkey.update(delta); // Update the donkey's animation mixer
-    }    
+    }
     if (mixerShiba) {
       mixerShiba.update(delta); // Update the shiba's animation mixer
     }
@@ -430,7 +447,6 @@ function enableBackfaceCullingForModel(model) {
 }
 
 function walkRandomDirection(model, mixer, clip) {
-  // Generate a random direction
   const randomDirection = new THREE.Vector3(
     Math.random() * 2 - 1, // Random x direction between -1 and 1
     0, // Keep y direction constant (no vertical movement)
@@ -468,6 +484,6 @@ function walkRandomDirection(model, mixer, clip) {
     // Start the movement
     move();
   } else {
-    console.error('Animation mixer not initialized!');
+    console.error("Animation mixer not initialized!");
   }
 }
