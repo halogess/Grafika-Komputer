@@ -18,7 +18,7 @@ const direction = new THREE.Vector3();
 const vertex = new THREE.Vector3();
 const color = new THREE.Color();
 const loader = new GLTFLoader();
-let mixer, mixerDonkey, mixerShiba, rotorModel,cameraBoundingSphere;
+let mixer, mixerDonkey, mixerShiba, rotorModel, rotorModel2,rotorModel3,cameraBoundingSphere;
 
 
 init();
@@ -369,7 +369,7 @@ function loadProp() {
   });
   loader.load(turbine.href, function (gltf) {
     const model = gltf.scene;
-    model.position.set(160, 0, -25);
+    model.position.set(160, 0, -50);
     model.scale.set(3, 7, 3);
     scene.add(model);
     enableBackfaceCullingForModel(model);
@@ -383,7 +383,7 @@ function loadProp() {
 // Load the rotor model and store it in a global variable
 loader.load(rotor.href, function (gltf) {
   rotorModel = gltf.scene;
-  rotorModel.position.set(160, 235, -45);
+  rotorModel.position.set(160, 235, -70);
   rotorModel.scale.set(5, 5, 5);
   scene.add(rotorModel);
   enableBackfaceCullingForModel(rotorModel);
@@ -392,6 +392,58 @@ loader.load(rotor.href, function (gltf) {
       objects.push(child);
     }
   });
+});
+loader.load(turbine.href, function (gltf) {
+  const model = gltf.scene;
+  model.position.set(-40, 0, -50);
+  model.scale.set(3, 7, 3);
+  scene.add(model);
+  enableBackfaceCullingForModel(model);
+  model.traverse(function (child) {
+    if (child.isMesh) {
+      objects.push(child);
+    }
+  });
+});
+
+// Load the rotor model and store it in a global variable
+loader.load(rotor.href, function (gltf) {
+rotorModel2 = gltf.scene;
+rotorModel2.position.set(-40, 235, -70);
+rotorModel2.scale.set(5, 5, 5);
+scene.add(rotorModel2);
+enableBackfaceCullingForModel(rotorModel2);
+model.traverse(function (child) {
+  if (child.isMesh) {
+    objects.push(child);
+  }
+});
+});
+loader.load(turbine.href, function (gltf) {
+  const model = gltf.scene;
+  model.position.set(-240, 0, -50);
+  model.scale.set(3, 7, 3);
+  scene.add(model);
+  enableBackfaceCullingForModel(model);
+  model.traverse(function (child) {
+    if (child.isMesh) {
+      objects.push(child);
+    }
+  });
+});
+
+// Load the rotor model and store it in a global variable
+loader.load(rotor.href, function (gltf) {
+rotorModel3 = gltf.scene;
+rotorModel3.position.set(-240, 235, -70);
+rotorModel3.scale.set(5, 5, 5);
+scene.add(rotorModel3);
+enableBackfaceCullingForModel(rotorModel3);
+model.traverse(function (child) {
+  if (child.isMesh) {
+    objects.push(child);
+  }
+});
 });
 }
 
@@ -479,8 +531,10 @@ function animate() {
     }
 
     // Rotate the rotor model
-    if (rotorModel) {
+    if (rotorModel && rotorModel2&& rotorModel3) {
       rotorModel.rotation.z += 0.09; // Adjust the rotation speed as needed
+      rotorModel2.rotation.z += 0.09; // Adjust the rotation speed as needed
+      rotorModel3.rotation.z += 0.09; // Adjust the rotation speed as needed
     }
 
     prevTime = time;
