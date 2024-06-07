@@ -5,32 +5,27 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 // import { GLBLoader } from "three/examples/jsm/loaders/g";
 
 let camera, scene, renderer, controls;
-
 const objects = [];
-
 let raycaster;
-
 let moveForward = false;
 let moveBackward = false;
 let moveLeft = false;
 let moveRight = false;
 let canJump = false;
-
 let prevTime = performance.now();
 const velocity = new THREE.Vector3();
 const direction = new THREE.Vector3();
 const vertex = new THREE.Vector3();
 const color = new THREE.Color();
 const loader = new GLTFLoader();
+let mixer, mixerDonkey, mixerShiba, rotorModel,cameraBoundingSphere;
 
-let mixer;
-let mixerDonkey;
-let mixerShiba;
 
 init();
 animate();
 
 function init() {
+  cameraBoundingSphere = new THREE.Sphere(new THREE.Vector3(), 2); // radius of 2
   camera = new THREE.PerspectiveCamera(
     75,
     window.innerWidth / window.innerHeight,
@@ -193,7 +188,6 @@ function loadModels() {
         objects.push(child);
       }
     });
-    // alert(objects.length);
   });
 
   // Load the donkey model and create its mixer
@@ -310,7 +304,16 @@ function loadProp() {
   const waterTrayUrl = new URL("/assets/glb/waterTray.glb", import.meta.url);
   const barnUrl = new URL("/assets/glb/Barn.glb", import.meta.url);
   const windTurbineUrl = new URL(
-    "/assets/glb//windTurbine_new.glb",
+    "/assets/glb/windTurbine_new.glb",
+    import.meta.url
+  );
+  const turbine = new URL(
+    "/assets/glb//turbine.glb",
+    import.meta.url
+  );
+  
+  const rotor = new URL(
+    "/assets/glb/rotor.glb",
     import.meta.url
   );
 
@@ -320,6 +323,11 @@ function loadProp() {
     model.scale.set(5, 5, 5);
     scene.add(model);
     enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
   });
   loader.load(feedingTrayUrl.href, function (gltf) {
     const model = gltf.scene;
@@ -328,6 +336,11 @@ function loadProp() {
     model.rotation.y = Math.PI / 2; // Rotate 90 degrees around Y-axis
     scene.add(model);
     enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
   });
   loader.load(waterTrayUrl.href, function (gltf) {
     const model = gltf.scene;
@@ -335,6 +348,11 @@ function loadProp() {
     model.scale.set(5, 5, 5);
     scene.add(model);
     enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
   });
   loader.load(barnUrl.href, function (gltf) {
     const model = gltf.scene;
@@ -342,14 +360,39 @@ function loadProp() {
     model.scale.set(5, 5, 5);
     scene.add(model);
     enableBackfaceCullingForModel(model);
+
+  model.traverse(function (child) {
+    if (child.isMesh) {
+      objects.push(child); // Add to objects array
+    }
   });
-  loader.load(windTurbineUrl.href, function (gltf) {
+  });
+  loader.load(turbine.href, function (gltf) {
     const model = gltf.scene;
     model.position.set(160, 0, -25);
-    model.scale.set(3, 3, 3);
+    model.scale.set(3, 7, 3);
     scene.add(model);
-    enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
+    enableBackfaceCullingForModel(model);
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
   });
+  
+// Load the rotor model and store it in a global variable
+loader.load(rotor.href, function (gltf) {
+  rotorModel = gltf.scene;
+  rotorModel.position.set(160, 235, -45);
+  rotorModel.scale.set(5, 5, 5);
+  scene.add(rotorModel);
+  enableBackfaceCullingForModel(rotorModel);
+  model.traverse(function (child) {
+    if (child.isMesh) {
+      objects.push(child);
+    }
+  });
+});
 }
 
 function setFloor() {
@@ -378,19 +421,24 @@ function onWindowResize() {
 
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
+function checkCollision() {
+  cameraBoundingSphere.center.copy(controls.getObject().position);
 
+  for (let i = 0; i < objects.length; i++) {
+    const object = objects[i];
+    const objectBoundingBox = new THREE.Box3().setFromObject(object);
+    if (cameraBoundingSphere.intersectsBox(objectBoundingBox)) {
+      return true;
+    }
+  }
+  return false;
+}
 function animate() {
   requestAnimationFrame(animate);
 
   const time = performance.now();
 
   if (controls.isLocked === true) {
-    raycaster.ray.origin.copy(controls.getObject().position);
-    raycaster.ray.origin.y -= 10;
-
-    const intersections = raycaster.intersectObjects(objects, false);
-    const onObject = intersections.length > 0;
-
     const delta = (time - prevTime) / 1000;
 
     velocity.x -= velocity.x * 10.0 * delta;
@@ -404,8 +452,18 @@ function animate() {
     if (moveForward || moveBackward) velocity.z -= direction.z * 400.0 * delta;
     if (moveLeft || moveRight) velocity.x -= direction.x * 400.0 * delta;
 
-    if (onObject === true) {
-      velocity.y = Math.max(0, velocity.y);
+    if (checkCollision()) {
+      velocity.x = 0;
+      velocity.z = 0;
+    }
+
+    controls.moveRight(-velocity.x * delta);
+    controls.moveForward(-velocity.z * delta);
+    controls.getObject().position.y += velocity.y * delta; // new behavior
+
+    if (controls.getObject().position.y < 10) {
+      velocity.y = 0;
+      controls.getObject().position.y = 10;
       canJump = true;
     }
 
@@ -420,22 +478,15 @@ function animate() {
       mixerShiba.update(delta); // Update the shiba's animation mixer
     }
 
-    // Move controls
-    controls.moveRight(-velocity.x * delta);
-    controls.moveForward(-velocity.z * delta);
-
-    controls.getObject().position.y += velocity.y * delta; // new behavior
-
-    if (controls.getObject().position.y < 10) {
-      velocity.y = 0;
-      controls.getObject().position.y = 10;
-      canJump = true;
+    // Rotate the rotor model
+    if (rotorModel) {
+      rotorModel.rotation.z += 0.09; // Adjust the rotation speed as needed
     }
+
+    prevTime = time;
+
+    renderer.render(scene, camera);
   }
-
-  prevTime = time;
-
-  renderer.render(scene, camera);
 }
 
 function enableBackfaceCullingForModel(model) {
