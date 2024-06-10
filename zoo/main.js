@@ -18,8 +18,13 @@ const direction = new THREE.Vector3();
 const vertex = new THREE.Vector3();
 const color = new THREE.Color();
 const loader = new GLTFLoader();
-let mixer, mixerDonkey, mixerShiba, rotorModel, rotorModel2,rotorModel3,cameraBoundingSphere;
-
+let mixer,
+  mixerDonkey,
+  mixerShiba,
+  rotorModel,
+  rotorModel2,
+  rotorModel3,
+  cameraBoundingSphere;
 
 init();
 animate();
@@ -240,7 +245,7 @@ function loadModels() {
     model.position.set(50, 0, -14);
     model.scale.set(2.5, 2.5, 2.5);
     scene.add(model);
-    enableBackfaceCullingForModel(model); 
+    enableBackfaceCullingForModel(model);
 
     model.traverse(function (child) {
       if (child.isMesh) {
@@ -307,15 +312,9 @@ function loadProp() {
     "/assets/glb/windTurbine_new.glb",
     import.meta.url
   );
-  const turbine = new URL(
-    "/assets/glb//turbine.glb",
-    import.meta.url
-  );
-  
-  const rotor = new URL(
-    "/assets/glb/rotor.glb",
-    import.meta.url
-  );
+  const turbine = new URL("/assets/glb//turbine.glb", import.meta.url);
+
+  const rotor = new URL("/assets/glb/rotor.glb", import.meta.url);
 
   loader.load(fenceUrl.href, function (gltf) {
     const model = gltf.scene;
@@ -361,11 +360,11 @@ function loadProp() {
     scene.add(model);
     enableBackfaceCullingForModel(model);
 
-  model.traverse(function (child) {
-    if (child.isMesh) {
-      objects.push(child); // Add to objects array
-    }
-  });
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child); // Add to objects array
+      }
+    });
   });
   loader.load(turbine.href, function (gltf) {
     const model = gltf.scene;
@@ -379,72 +378,72 @@ function loadProp() {
       }
     });
   });
-  
-// Load the rotor model and store it in a global variable
-loader.load(rotor.href, function (gltf) {
-  rotorModel = gltf.scene;
-  rotorModel.position.set(160, 235, -70);
-  rotorModel.scale.set(5, 5, 5);
-  scene.add(rotorModel);
-  enableBackfaceCullingForModel(rotorModel);
-  model.traverse(function (child) {
-    if (child.isMesh) {
-      objects.push(child);
-    }
-  });
-});
-loader.load(turbine.href, function (gltf) {
-  const model = gltf.scene;
-  model.position.set(-40, 0, -50);
-  model.scale.set(3, 7, 3);
-  scene.add(model);
-  enableBackfaceCullingForModel(model);
-  model.traverse(function (child) {
-    if (child.isMesh) {
-      objects.push(child);
-    }
-  });
-});
 
-// Load the rotor model and store it in a global variable
-loader.load(rotor.href, function (gltf) {
-rotorModel2 = gltf.scene;
-rotorModel2.position.set(-40, 235, -70);
-rotorModel2.scale.set(5, 5, 5);
-scene.add(rotorModel2);
-enableBackfaceCullingForModel(rotorModel2);
-model.traverse(function (child) {
-  if (child.isMesh) {
-    objects.push(child);
-  }
-});
-});
-loader.load(turbine.href, function (gltf) {
-  const model = gltf.scene;
-  model.position.set(-240, 0, -50);
-  model.scale.set(3, 7, 3);
-  scene.add(model);
-  enableBackfaceCullingForModel(model);
-  model.traverse(function (child) {
-    if (child.isMesh) {
-      objects.push(child);
-    }
+  // Load the rotor model and store it in a global variable
+  loader.load(rotor.href, function (gltf) {
+    rotorModel = gltf.scene;
+    rotorModel.position.set(160, 235, -70);
+    rotorModel.scale.set(5, 5, 5);
+    scene.add(rotorModel);
+    enableBackfaceCullingForModel(rotorModel);
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
   });
-});
+  loader.load(turbine.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(-40, 0, -50);
+    model.scale.set(3, 7, 3);
+    scene.add(model);
+    enableBackfaceCullingForModel(model);
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
 
-// Load the rotor model and store it in a global variable
-loader.load(rotor.href, function (gltf) {
-rotorModel3 = gltf.scene;
-rotorModel3.position.set(-240, 235, -70);
-rotorModel3.scale.set(5, 5, 5);
-scene.add(rotorModel3);
-enableBackfaceCullingForModel(rotorModel3);
-model.traverse(function (child) {
-  if (child.isMesh) {
-    objects.push(child);
-  }
-});
-});
+  // Load the rotor model and store it in a global variable
+  loader.load(rotor.href, function (gltf) {
+    rotorModel2 = gltf.scene;
+    rotorModel2.position.set(-40, 235, -70);
+    rotorModel2.scale.set(5, 5, 5);
+    scene.add(rotorModel2);
+    enableBackfaceCullingForModel(rotorModel2);
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
+  loader.load(turbine.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(-240, 0, -50);
+    model.scale.set(3, 7, 3);
+    scene.add(model);
+    enableBackfaceCullingForModel(model);
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
+
+  // Load the rotor model and store it in a global variable
+  loader.load(rotor.href, function (gltf) {
+    rotorModel3 = gltf.scene;
+    rotorModel3.position.set(-240, 235, -70);
+    rotorModel3.scale.set(5, 5, 5);
+    scene.add(rotorModel3);
+    enableBackfaceCullingForModel(rotorModel3);
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
 }
 
 function setFloor() {
@@ -473,6 +472,7 @@ function onWindowResize() {
 
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
+
 function checkCollision() {
   cameraBoundingSphere.center.copy(controls.getObject().position);
 
@@ -485,6 +485,7 @@ function checkCollision() {
   }
   return false;
 }
+
 function animate() {
   requestAnimationFrame(animate);
 
@@ -497,6 +498,9 @@ function animate() {
     velocity.z -= velocity.z * 10.0 * delta;
     velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
 
+    // misal maju = 1 - 0 = 1
+    // misal mundur = 0 - 1 = -1
+
     direction.z = Number(moveForward) - Number(moveBackward);
     direction.x = Number(moveRight) - Number(moveLeft);
     direction.normalize(); // this ensures consistent movements in all directions
@@ -504,14 +508,15 @@ function animate() {
     if (moveForward || moveBackward) velocity.z -= direction.z * 400.0 * delta;
     if (moveLeft || moveRight) velocity.x -= direction.x * 400.0 * delta;
 
-    if (checkCollision()) {
-      velocity.x = 0;
-      velocity.z = 0;
-    }
-
     controls.moveRight(-velocity.x * delta);
     controls.moveForward(-velocity.z * delta);
-    controls.getObject().position.y += velocity.y * delta; // new behavior
+    controls.getObject().position.y += velocity.y * delta;
+
+    if (checkCollision()) {
+      controls.moveRight(velocity.x * delta);
+      controls.moveForward(velocity.z * delta);
+      controls.getObject().position.y += velocity.y * delta;
+    }
 
     if (controls.getObject().position.y < 10) {
       velocity.y = 0;
@@ -531,7 +536,7 @@ function animate() {
     }
 
     // Rotate the rotor model
-    if (rotorModel && rotorModel2&& rotorModel3) {
+    if (rotorModel && rotorModel2 && rotorModel3) {
       rotorModel.rotation.z += 0.09; // Adjust the rotation speed as needed
       rotorModel2.rotation.z += 0.09; // Adjust the rotation speed as needed
       rotorModel3.rotation.z += 0.09; // Adjust the rotation speed as needed
