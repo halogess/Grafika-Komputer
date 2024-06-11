@@ -5,6 +5,8 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 // import { GLBLoader } from "three/examples/jsm/loaders/g";
 
 let camera, scene, renderer, controls;
+let isInteractive = false;
+let shibaSprint = false;
 const objects = [];
 let raycaster;
 let moveForward = false;
@@ -24,7 +26,9 @@ let mixer,
   rotorModel,
   rotorModel2,
   rotorModel3,
-  cameraBoundingSphere;
+  cameraBoundingSphere,
+  lawnMower,
+  shiba;
 
 init();
 animate();
@@ -93,6 +97,32 @@ function init() {
         if (canJump === true) velocity.y += 200;
         canJump = false;
         break;
+
+        case "KeyE":
+          console.log("KeyE pressed");
+          if (isNearLawnMower()) {
+            isInteractive = true; // Toggle the isInteractive state
+          }
+          if (isNearShiba()) {
+            console.log("deketshiba");
+            shibaSprint = true; // Toggle the shibaSprint state
+          }
+          // Unlock controls if either condition is met
+          if (isNearLawnMower() || isNearShiba()) {
+            controls.lock(); // Unlock the controls
+          }
+          break;
+
+    case "KeyQ":
+      console.log("KeyQ pressed");
+      if (isInteractive) {
+        isInteractive = false; // Toggle the isInteractive state back to false
+        controls.lock(); // Lock the controls again
+        // Ubah posisi y player +200 dan x player -20
+        controls.getObject().position.y += 20;
+        controls.getObject().position.z -= 5;
+      }
+      break;
     }
   };
 
@@ -173,11 +203,6 @@ function loadModels() {
     mixer = new THREE.AnimationMixer(model);
     const clips = gltf.animations;
 
-    console.log("Animation clips found in GLTF file (Deer):");
-    clips.forEach((clip, index) => {
-      console.log(`Clip ${index + 1}: ${clip.name}`);
-    });
-
     // Find and play the 'Idle_2' animation
     const idleClip = THREE.AnimationClip.findByName(clips, "Idle_2");
     if (idleClip) {
@@ -256,20 +281,20 @@ function loadModels() {
 
   // Load the shiba model and create its mixer
   loader.load(shibaUrl.href, function (gltf) {
-    const model = gltf.scene;
-    model.position.set(0, 0, 10);
-    model.scale.set(2.5, 2.5, 2.5);
-    scene.add(model);
-    enableBackfaceCullingForModel(model); // Enable backface culling for the shiba model
+    shiba = gltf.scene;
+    shiba.position.set(0, 0, 10);
+    shiba.scale.set(2.5, 2.5, 2.5);
+    scene.add(shiba);
+    enableBackfaceCullingForModel(shiba); // Enable backface culling for the shiba model
 
     // Create the animation mixer for the shiba
-    mixerShiba = new THREE.AnimationMixer(model);
+    mixerShiba = new THREE.AnimationMixer(shiba);
     const clips = gltf.animations;
 
     // Find and play the 'Walk' animation
     const walkClip = THREE.AnimationClip.findByName(clips, "Walk");
     if (walkClip) {
-      walkRandomDirection(model, mixerShiba, walkClip);
+      walkRandomDirection(shiba, mixerShiba, walkClip);
       const action = mixerShiba.clipAction(walkClip);
       action.loop = THREE.LoopRepeat;
       action.clampWhenFinished = true;
@@ -277,8 +302,7 @@ function loadModels() {
     } else {
       console.error("Walk animation clip not found for Shiba!");
     }
-
-    model.traverse(function (child) {
+    shiba.traverse(function (child) {
       if (child.isMesh) {
         objects.push(child);
       }
@@ -315,6 +339,7 @@ function loadProp() {
   const turbine = new URL("/assets/glb//turbine.glb", import.meta.url);
 
   const rotor = new URL("/assets/glb/rotor.glb", import.meta.url);
+  const lawn_mower = new URL("/assets/glb/lawn_mower.glb", import.meta.url);
 
   loader.load(fenceUrl.href, function (gltf) {
     const model = gltf.scene;
@@ -381,12 +406,12 @@ function loadProp() {
 
   // Load the rotor model and store it in a global variable
   loader.load(rotor.href, function (gltf) {
-    rotorModel = gltf.scene;
+     rotorModel = gltf.scene;
     rotorModel.position.set(160, 235, -70);
     rotorModel.scale.set(5, 5, 5);
     scene.add(rotorModel);
     enableBackfaceCullingForModel(rotorModel);
-    model.traverse(function (child) {
+    rotorModel.traverse(function (child) {
       if (child.isMesh) {
         objects.push(child);
       }
@@ -407,12 +432,12 @@ function loadProp() {
 
   // Load the rotor model and store it in a global variable
   loader.load(rotor.href, function (gltf) {
-    rotorModel2 = gltf.scene;
+     rotorModel2 = gltf.scene;
     rotorModel2.position.set(-40, 235, -70);
     rotorModel2.scale.set(5, 5, 5);
     scene.add(rotorModel2);
     enableBackfaceCullingForModel(rotorModel2);
-    model.traverse(function (child) {
+    rotorModel2.traverse(function (child) {
       if (child.isMesh) {
         objects.push(child);
       }
@@ -433,17 +458,41 @@ function loadProp() {
 
   // Load the rotor model and store it in a global variable
   loader.load(rotor.href, function (gltf) {
-    rotorModel3 = gltf.scene;
+     rotorModel3 = gltf.scene;
     rotorModel3.position.set(-240, 235, -70);
     rotorModel3.scale.set(5, 5, 5);
     scene.add(rotorModel3);
     enableBackfaceCullingForModel(rotorModel3);
-    model.traverse(function (child) {
+    rotorModel3.traverse(function (child) {
       if (child.isMesh) {
         objects.push(child);
       }
     });
   });
+
+  loader.load(lawn_mower.href, function (gltf) {
+    lawnMower = gltf.scene;
+
+    // Set position and scale
+    lawnMower.position.set(100, 4, 0);
+    lawnMower.scale.set(5, 5, 5);
+
+    // Rotate the model 180 degrees around the y-axis
+    lawnMower.rotation.y = Math.PI; // 180 degrees in radians
+
+    // Add the model to the scene
+    scene.add(lawnMower);
+
+    // Enable backface culling for the model
+    enableBackfaceCullingForModel(lawnMower);
+
+    // Traverse the model and push each mesh to the objects array
+    lawnMower.traverse(function (child) {
+        if (child.isMesh) {
+            objects.push(child);
+        }
+    });
+});
 }
 
 function setFloor() {
@@ -473,6 +522,76 @@ function onWindowResize() {
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
+function enableBackfaceCullingForModel(model) {
+  model.traverse((child) => {
+    if (child.isMesh) {
+      child.material.side = THREE.FrontSide;
+    }
+  });
+}
+
+function walkRandomDirection(model, mixer, clip) {
+  const randomDirection = new THREE.Vector3(
+    Math.random() * 2 - 1, // Random x direction between -1 and 1
+    0, // Keep y direction constant (no vertical movement)
+    Math.random() * 2 - 1 // Random z direction between -1 and 1
+  ).normalize(); // Normalize to ensure consistent movement speed
+
+  // Set the model's rotation to face the random direction
+  const angle = Math.atan2(randomDirection.x, randomDirection.z);
+  model.rotation.y = angle;
+
+  // Play the animation
+  if (mixer) {
+    const action = mixer.clipAction(clip);
+    action.loop = THREE.LoopRepeat; // Ensure the animation loops
+    action.clampWhenFinished = true;
+    action.play();
+
+    const move = () => {
+      if (shibaSprint) {
+        model.position.x += randomDirection.x * 1.2; // Adjust speed as necessary
+        model.position.z += randomDirection.z * 1.2; // Adjust speed as necessary
+    
+        // Set shibaSprint to false after 2 seconds
+        setTimeout(() => {
+          shibaSprint = false;
+        }, 3000);
+    
+        // Check constraints and stop movement if out of bounds
+        if (model.position.x > 120 || model.position.x < -30) {
+          // Adjust position to stay within bounds
+          model.position.x = Math.min(Math.max(model.position.x, -30), 120);
+          // Generate a new random direction
+          walkRandomDirection(model, mixer, clip);
+        } else {
+          // Continue moving
+          requestAnimationFrame(move);
+        }
+    
+      } else {
+        model.position.x += randomDirection.x * 0.3; // Adjust speed as necessary
+        model.position.z += randomDirection.z * 0.3; // Adjust speed as necessary
+    
+        // Check constraints and stop movement if out of bounds
+        if (model.position.x > 120 || model.position.x < -30) {
+          // Adjust position to stay within bounds
+          model.position.x = Math.min(Math.max(model.position.x, -30), 120);
+          // Generate a new random direction
+          walkRandomDirection(model, mixer, clip);
+        } else {
+          // Continue moving
+          requestAnimationFrame(move);
+        }
+      }
+    };
+    
+    // Start the movement
+    move();
+    } else {
+    console.error("Animation mixer not initialized!");
+  }
+}
 function checkCollision() {
   cameraBoundingSphere.center.copy(controls.getObject().position);
 
@@ -485,15 +604,100 @@ function checkCollision() {
   }
   return false;
 }
+function isNearLawnMower() {
+  const lawnMowerPosition = new THREE.Vector3(lawnMower.position.x, lawnMower.position.y, lawnMower.position.z);
+  const playerPosition = controls.getObject().position;
+  const distance = playerPosition.distanceTo(lawnMowerPosition);
+  const threshold = 10; // Distance threshold to consider "near"
 
+  if (distance <= threshold) {
+    return true;
+  }
+  return false;
+}
+function isNearShiba() {
+  const shibaPosition = new THREE.Vector3(shiba.position.x, shiba.position.y, shiba.position.z);
+  const playerPosition = controls.getObject().position;
+  const distance = playerPosition.distanceTo(shibaPosition);
+  console.log(distance);
+  const threshold = 13; // Distance threshold to consider "near"
+
+  if (distance <= threshold) {
+    return true;
+  }
+  return false;
+}
+// Create an AudioListener and add it to the camera
+const listener = new THREE.AudioListener();
+camera.add(listener);
+
+// Create a global audio source
+const sound = new THREE.Audio(listener);
+
+// Load a sound and set it as the Audio object's buffer
+const audioLoader = new THREE.AudioLoader();
+audioLoader.load('assets/sound/lawnmower.mp3', function(buffer) {
+  sound.setBuffer(buffer);
+  sound.setLoop(true); // Set to true if you want the music to loop
+  sound.setVolume(0.05); // Adjust volume as needed
+  if (isInteractive) {
+    sound.play();
+  }
+});
+let shibaSprintStart = 0; // variabel untuk menyimpan waktu mulai shibaSprint
 function animate() {
   requestAnimationFrame(animate);
-
   const time = performance.now();
-
+  const delta = (time - prevTime) / 1000;
   if (controls.isLocked === true) {
-    const delta = (time - prevTime) / 1000;
+    if (isInteractive) {
+      // Update camera position behind the lawn mower
+      const lawnMowerPosition = new THREE.Vector3(lawnMower.position.x, lawnMower.position.y, lawnMower.position.z);
+      const offset = new THREE.Vector3(0, 5, -7); // Adjust the offset as needed
+      camera.position.copy(lawnMowerPosition).add(offset);
+      // camera.lookAt(lawnMowerPosition);
+      if (!sound.isPlaying) {
+        sound.play();
+      }
+      // Move the lawn_mower along with the camera (player movement)
+    if (moveForward) {
+      // Move lawn_mower forward
+      lawnMower.position.z -= velocity.z * delta;
+    } else if (moveBackward) {
+      // Move lawn_mower backward
+      lawnMower.position.z -= velocity.z * delta;
+    } else if (moveLeft) {
+      // Move lawn_mower forward
+      lawnMower.position.x += velocity.x * delta;
+    } else if (moveRight) {
+      // Move lawn_mower backward
+      lawnMower.position.x += velocity.x * delta;
+    }
+    } else {
+      if (sound.isPlaying) {
+        sound.stop();
+      }
+    }
 
+    // if (shibaSprint) {
+    //   // Activate shibaSprint
+    //   if (shibaSprintStart === 0) {
+    //     console.log("shibastart");
+    //     shibaSprintStart = time; // Set the start time of shibaSprint
+    //     // Increase Shiba's speed (example: by adding to its position)
+    //     shiba.position.x += 200 * delta; // Adjust speed as needed
+    //   }
+
+    //   // Check if 2 seconds have passed since shibaSprint activation
+    //   if (time - shibaSprintStart >= 2000) {
+    //     console.log("shibatired");
+    //     // Deactivate shibaSprint
+    //     shibaSprint = false;
+    //     shibaSprintStart = 0; // Reset the start time of shibaSprint
+    //     // Reset Shiba's speed (example: by subtracting from its position)
+    //     shiba.position.z -= 10 * delta; // Adjust speed as needed
+    //   }
+    // }
     velocity.x -= velocity.x * 10.0 * delta;
     velocity.z -= velocity.z * 10.0 * delta;
     velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
@@ -543,57 +747,6 @@ function animate() {
     }
 
     prevTime = time;
-
     renderer.render(scene, camera);
-  }
-}
-
-function enableBackfaceCullingForModel(model) {
-  model.traverse((child) => {
-    if (child.isMesh) {
-      child.material.side = THREE.FrontSide;
-    }
-  });
-}
-
-function walkRandomDirection(model, mixer, clip) {
-  const randomDirection = new THREE.Vector3(
-    Math.random() * 2 - 1, // Random x direction between -1 and 1
-    0, // Keep y direction constant (no vertical movement)
-    Math.random() * 2 - 1 // Random z direction between -1 and 1
-  ).normalize(); // Normalize to ensure consistent movement speed
-
-  // Set the model's rotation to face the random direction
-  const angle = Math.atan2(randomDirection.x, randomDirection.z);
-  model.rotation.y = angle;
-
-  // Play the animation
-  if (mixer) {
-    const action = mixer.clipAction(clip);
-    action.loop = THREE.LoopRepeat; // Ensure the animation loops
-    action.clampWhenFinished = true;
-    action.play();
-
-    // Move the model in the random direction
-    const move = () => {
-      model.position.x += randomDirection.x * 0.3; // Adjust speed as necessary
-      model.position.z += randomDirection.z * 0.3; // Adjust speed as necessary
-
-      // Check constraints and stop movement if out of bounds
-      if (model.position.x > 120 || model.position.x < -30) {
-        // Adjust position to stay within bounds
-        model.position.x = Math.min(Math.max(model.position.x, -30), 120);
-        // Generate a new random direction
-        walkRandomDirection(model, mixer, clip);
-      } else {
-        // Continue moving
-        requestAnimationFrame(move);
-      }
-    };
-
-    // Start the movement
-    move();
-  } else {
-    console.error("Animation mixer not initialized!");
   }
 }
