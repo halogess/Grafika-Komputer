@@ -34,7 +34,7 @@ init();
 animate();
 
 function init() {
-  cameraBoundingSphere = new THREE.Sphere(new THREE.Vector3(), 2); // radius of 2
+  cameraBoundingSphere = new THREE.Sphere(new THREE.Vector3(), 2);
   camera = new THREE.PerspectiveCamera(
     75,
     window.innerWidth / window.innerHeight,
@@ -46,9 +46,16 @@ function init() {
   scene.background = new THREE.Color(0xffffff);
   scene.fog = new THREE.Fog(0xffffff, 0, 750);
 
-  const light = new THREE.HemisphereLight(0xeeeeff, 0x777788, 2.5);
-  light.position.set(0.5, 1, 0.75);
+  const light = new THREE.DirectionalLight(0xffffff, 1);
+  light.position.set(5, 10, 7.5).normalize();
   scene.add(light);
+
+  // const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+  // scene.add(ambientLight);
+
+  const hemilight = new THREE.HemisphereLight(0xeeeeff, 0x777788, 1);
+  hemilight.position.set(0.5, 1, 0.75);
+  scene.add(hemilight);
 
   controls = new PointerLockControls(camera, document.body);
 
@@ -98,31 +105,31 @@ function init() {
         canJump = false;
         break;
 
-        case "KeyE":
-          console.log("KeyE pressed");
-          if (isNearLawnMower()) {
-            isInteractive = true; // Toggle the isInteractive state
-          }
-          if (isNearShiba()) {
-            console.log("deketshiba");
-            shibaSprint = true; // Toggle the shibaSprint state
-          }
-          // Unlock controls if either condition is met
-          if (isNearLawnMower() || isNearShiba()) {
-            controls.lock(); // Unlock the controls
-          }
-          break;
+      case "KeyE":
+        console.log("KeyE pressed");
+        if (isNearLawnMower()) {
+          isInteractive = true;
+        }
+        if (isNearShiba()) {
+          console.log("deketshiba");
+          shibaSprint = true;
+        }
+        // Unlock controls if either condition is met
+        if (isNearLawnMower() || isNearShiba()) {
+          controls.lock(); // Unlock the controls
+        }
+        break;
 
-    case "KeyQ":
-      console.log("KeyQ pressed");
-      if (isInteractive) {
-        isInteractive = false; // Toggle the isInteractive state back to false
-        controls.lock(); // Lock the controls again
-        // Ubah posisi y player +200 dan x player -20
-        controls.getObject().position.y += 20;
-        controls.getObject().position.z -= 5;
-      }
-      break;
+      case "KeyQ":
+        console.log("KeyQ pressed");
+        if (isInteractive) {
+          isInteractive = false;
+          controls.lock(); // Lock the controls again
+          // Ubah posisi y player +200 dan x player -20
+          controls.getObject().position.y += 20;
+          controls.getObject().position.z -= 5;
+        }
+        break;
     }
   };
 
@@ -177,11 +184,73 @@ function init() {
   window.addEventListener("resize", onWindowResize);
 }
 
-function loadModels() {
+function loadDonkey() {
   const donkeyUrl = new URL(
     "/assets/gltf/animals/Donkey.gltf",
     import.meta.url
   );
+
+  loader.load(donkeyUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(75, 0, -50);
+    model.scale.set(3, 3, 3);
+    scene.add(model);
+    enableBackfaceCullingForModel(model); // Enable backface culling for the donkey model
+
+    // Create the animation mixer for the donkey
+    mixerDonkey = new THREE.AnimationMixer(model);
+    const clips = gltf.animations;
+
+    // Find and play the 'Eating' animation
+    const eatingClip = THREE.AnimationClip.findByName(clips, "Eating");
+    if (eatingClip) {
+      const action = mixerDonkey.clipAction(eatingClip);
+      action.loop = THREE.LoopRepeat;
+      action.clampWhenFinished = true;
+      action.play();
+    } else {
+      console.error("Eating animation clip not found for Donkey!");
+    }
+
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
+
+  loader.load(donkeyUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(80, 0, -20);
+    model.scale.set(3, 3, 3);
+    scene.add(model);
+    enableBackfaceCullingForModel(model);
+
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
+
+  // donkey 2
+  loader.load(donkeyUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(50, 0, -35);
+    model.scale.set(2.5, 2.5, 2.5);
+    model.rotateY(Math.PI);
+    scene.add(model);
+    enableBackfaceCullingForModel(model);
+
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
+}
+
+function loadModels() {
   const deerUrl = new URL("/assets/gltf/animals/Deer.gltf", import.meta.url);
   const foxUrl = new URL("/assets/gltf/animals/Fox.gltf", import.meta.url);
   const shibaUrl = new URL(
@@ -190,7 +259,8 @@ function loadModels() {
   );
   const wolfUrl = new URL("/assets/gltf/animals/Wolf.gltf", import.meta.url);
 
-  // Load the deer model and create its mixer
+  loadDonkey();
+
   loader.load(deerUrl.href, function (gltf) {
     const model = gltf.scene;
     model.position.set(15, 0, 10);
@@ -219,79 +289,17 @@ function loadModels() {
       }
     });
   });
-
-  // Load the donkey model and create its mixer
-  loader.load(donkeyUrl.href, function (gltf) {
-    const model = gltf.scene;
-    model.position.set(75, 0, -14);
-    model.scale.set(3, 3, 3);
-    model.rotation.y = Math.PI; // Rotate 180 degrees around Y-axis
-    scene.add(model);
-    enableBackfaceCullingForModel(model); // Enable backface culling for the donkey model
-
-    // Create the animation mixer for the donkey
-    mixerDonkey = new THREE.AnimationMixer(model);
-    const clips = gltf.animations;
-
-    // Find and play the 'Eating' animation
-    const eatingClip = THREE.AnimationClip.findByName(clips, "Eating");
-    if (eatingClip) {
-      const action = mixerDonkey.clipAction(eatingClip);
-      action.loop = THREE.LoopRepeat;
-      action.clampWhenFinished = true;
-      action.play();
-    } else {
-      console.error("Eating animation clip not found for Donkey!");
-    }
-
-    model.traverse(function (child) {
-      if (child.isMesh) {
-        objects.push(child);
-      }
-    });
-  });
-
-  loader.load(donkeyUrl.href, function (gltf) {
-    const model = gltf.scene;
-    model.position.set(60, 0, -14);
-    model.scale.set(2, 2, 2);
-    scene.add(model);
-    enableBackfaceCullingForModel(model);
-
-    model.traverse(function (child) {
-      if (child.isMesh) {
-        objects.push(child);
-      }
-    });
-  });
-
-  loader.load(donkeyUrl.href, function (gltf) {
-    const model = gltf.scene;
-    model.position.set(50, 0, -14);
-    model.scale.set(2.5, 2.5, 2.5);
-    scene.add(model);
-    enableBackfaceCullingForModel(model);
-
-    model.traverse(function (child) {
-      if (child.isMesh) {
-        objects.push(child);
-      }
-    });
-  });
-
-  // Load the shiba model and create its mixer
+  
   loader.load(shibaUrl.href, function (gltf) {
     shiba = gltf.scene;
     shiba.position.set(0, 0, 10);
     shiba.scale.set(2.5, 2.5, 2.5);
     scene.add(shiba);
-    enableBackfaceCullingForModel(shiba); // Enable backface culling for the shiba model
+    enableBackfaceCullingForModel(shiba);
 
-    // Create the animation mixer for the shiba
     mixerShiba = new THREE.AnimationMixer(shiba);
     const clips = gltf.animations;
 
-    // Find and play the 'Walk' animation
     const walkClip = THREE.AnimationClip.findByName(clips, "Walk");
     if (walkClip) {
       walkRandomDirection(shiba, mixerShiba, walkClip);
@@ -325,150 +333,20 @@ function loadModels() {
 }
 
 function loadProp() {
-  const fenceUrl = new URL("/assets/glb/PagarKayu.glb", import.meta.url);
-  const feedingTrayUrl = new URL(
-    "/assets/glb/feedingTray.glb",
+  loadKandang(0, 0);
+  loadKandang(-80, 0);
+  loadKandang(0, -80);
+  loadKandang(-80, -80);
+
+  const lawn_mower = new URL(
+    "/assets/glb/lawn_mower.glb",
     import.meta.url
   );
-  const waterTrayUrl = new URL("/assets/glb/waterTray.glb", import.meta.url);
-  const barnUrl = new URL("/assets/glb/Barn.glb", import.meta.url);
-  const windTurbineUrl = new URL(
-    "/assets/glb/windTurbine_new.glb",
-    import.meta.url
-  );
-  const turbine = new URL("/assets/glb//turbine.glb", import.meta.url);
 
-  const rotor = new URL("/assets/glb/rotor.glb", import.meta.url);
-  const lawn_mower = new URL("/assets/glb/lawn_mower.glb", import.meta.url);
+  loadKincir(0, 0);
+  loadKincir(0, -80);
+  loadKincir(0, -160);
 
-  loader.load(fenceUrl.href, function (gltf) {
-    const model = gltf.scene;
-    model.position.set(30, 0, 0);
-    model.scale.set(5, 5, 5);
-    scene.add(model);
-    enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
-    model.traverse(function (child) {
-      if (child.isMesh) {
-        objects.push(child);
-      }
-    });
-  });
-  loader.load(feedingTrayUrl.href, function (gltf) {
-    const model = gltf.scene;
-    model.position.set(75, 0, -22);
-    model.scale.set(17, 17, 17);
-    model.rotation.y = Math.PI / 2; // Rotate 90 degrees around Y-axis
-    scene.add(model);
-    enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
-    model.traverse(function (child) {
-      if (child.isMesh) {
-        objects.push(child);
-      }
-    });
-  });
-  loader.load(waterTrayUrl.href, function (gltf) {
-    const model = gltf.scene;
-    model.position.set(50, 0, -22);
-    model.scale.set(5, 5, 5);
-    scene.add(model);
-    enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
-    model.traverse(function (child) {
-      if (child.isMesh) {
-        objects.push(child);
-      }
-    });
-  });
-  loader.load(barnUrl.href, function (gltf) {
-    const model = gltf.scene;
-    model.position.set(130, 0, -25);
-    model.scale.set(5, 5, 5);
-    scene.add(model);
-    enableBackfaceCullingForModel(model);
-
-    model.traverse(function (child) {
-      if (child.isMesh) {
-        objects.push(child); // Add to objects array
-      }
-    });
-  });
-  loader.load(turbine.href, function (gltf) {
-    const model = gltf.scene;
-    model.position.set(160, 0, -50);
-    model.scale.set(3, 7, 3);
-    scene.add(model);
-    enableBackfaceCullingForModel(model);
-    model.traverse(function (child) {
-      if (child.isMesh) {
-        objects.push(child);
-      }
-    });
-  });
-
-  // Load the rotor model and store it in a global variable
-  loader.load(rotor.href, function (gltf) {
-     rotorModel = gltf.scene;
-    rotorModel.position.set(160, 235, -70);
-    rotorModel.scale.set(5, 5, 5);
-    scene.add(rotorModel);
-    enableBackfaceCullingForModel(rotorModel);
-    rotorModel.traverse(function (child) {
-      if (child.isMesh) {
-        objects.push(child);
-      }
-    });
-  });
-  loader.load(turbine.href, function (gltf) {
-    const model = gltf.scene;
-    model.position.set(-40, 0, -50);
-    model.scale.set(3, 7, 3);
-    scene.add(model);
-    enableBackfaceCullingForModel(model);
-    model.traverse(function (child) {
-      if (child.isMesh) {
-        objects.push(child);
-      }
-    });
-  });
-
-  // Load the rotor model and store it in a global variable
-  loader.load(rotor.href, function (gltf) {
-     rotorModel2 = gltf.scene;
-    rotorModel2.position.set(-40, 235, -70);
-    rotorModel2.scale.set(5, 5, 5);
-    scene.add(rotorModel2);
-    enableBackfaceCullingForModel(rotorModel2);
-    rotorModel2.traverse(function (child) {
-      if (child.isMesh) {
-        objects.push(child);
-      }
-    });
-  });
-  loader.load(turbine.href, function (gltf) {
-    const model = gltf.scene;
-    model.position.set(-240, 0, -50);
-    model.scale.set(3, 7, 3);
-    scene.add(model);
-    enableBackfaceCullingForModel(model);
-    model.traverse(function (child) {
-      if (child.isMesh) {
-        objects.push(child);
-      }
-    });
-  });
-
-  // Load the rotor model and store it in a global variable
-  loader.load(rotor.href, function (gltf) {
-     rotorModel3 = gltf.scene;
-    rotorModel3.position.set(-240, 235, -70);
-    rotorModel3.scale.set(5, 5, 5);
-    scene.add(rotorModel3);
-    enableBackfaceCullingForModel(rotorModel3);
-    rotorModel3.traverse(function (child) {
-      if (child.isMesh) {
-        objects.push(child);
-      }
-    });
-  });
 
   loader.load(lawn_mower.href, function (gltf) {
     lawnMower = gltf.scene;
@@ -495,8 +373,348 @@ function loadProp() {
 });
 }
 
+function loadKandang(x, z) {
+  
+  const fenceUrl = new URL("/assets/glb/fence.glb", import.meta.url);
+  const waterTrayUrl = new URL("/assets/glb/waterTray.glb", import.meta.url);
+
+  // kandang donkey depan
+  loader.load(fenceUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(45 + x, 0, -5 + z);
+    model.scale.set(6, 6, 6);
+    scene.add(model);
+    enableBackfaceCullingForModel(model);
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
+
+  // kandang donkey depan 2
+  loader.load(fenceUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(70 + x, 0, -5 + z);
+    model.scale.set(6, 6, 6);
+    scene.add(model);
+    enableBackfaceCullingForModel(model);
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
+
+  // kandang donkey belakang
+  loader.load(fenceUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(70 + x, 0, -55 + z);
+    model.scale.set(6, 6, 6);
+    model.rotateY(Math.PI);
+    scene.add(model);
+    enableBackfaceCullingForModel(model);
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
+
+  // kandang donkey belakang 2
+  loader.load(fenceUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(95 + x, 0, -55 + z);
+    model.scale.set(6, 6, 6);
+    model.rotateY(Math.PI);
+    scene.add(model);
+    enableBackfaceCullingForModel(model);
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
+
+  // kandang samping kiri
+  loader.load(fenceUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(45 + x, 0, -30 + z);
+    model.scale.set(6, 6, 6);
+
+    model.rotateY(-Math.PI / 2);
+    scene.add(model);
+    enableBackfaceCullingForModel(model);
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
+
+  loader.load(fenceUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(45 + x, 0, -55 + z);
+    model.scale.set(6, 6, 6);
+
+    model.rotateY(-Math.PI / 2);
+    scene.add(model);
+    enableBackfaceCullingForModel(model);
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
+
+  // kandang kanan donkey
+  loader.load(fenceUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(95 + x, 0, -5 + z);
+    model.scale.set(6, 6, 6);
+
+    model.rotateY(Math.PI / 2);
+    scene.add(model);
+    enableBackfaceCullingForModel(model);
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
+
+  // kandang kanan donkey
+  loader.load(fenceUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(95 + x, 0, -30 + z);
+    model.scale.set(6, 6, 6);
+
+    model.rotateY(Math.PI / 2);
+    scene.add(model);
+    enableBackfaceCullingForModel(model);
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
+
+  // pohon
+  const treeUrl = new URL("/assets/gltf/NormalTree_1.gltf", import.meta.url);
+  const leafTexture = new THREE.TextureLoader().load(
+    "./assets/img/NormalTree_Leaves.png"
+  );
+
+  const barkTexture = new THREE.TextureLoader().load(
+    "./assets/img/NormalTree_Bark.png"
+  );
+
+
+  loader.load(treeUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(50 + x, 0, -50 + z);
+    model.scale.set(4, 4, 4);
+    model.rotateY(Math.PI);
+    scene.add(model);
+
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        if (child.name === "Cylinder001_1") {
+          // Assign leaf texture
+          child.material.map = leafTexture;
+          child.material.emissive = new THREE.Color(0x00ff00); // Put your color here
+          child.material.emissiveIntensity = 0.08; // Adjust intensity as needed
+
+          console.log("Leaf texture applied");
+        } else {
+          child.material.map = barkTexture;
+          console.log("Bark texture applied");
+        }
+        child.material.needsUpdate = true;
+      }
+    });
+  });
+
+  loader.load(waterTrayUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(55 + x, 0, -10 + z);
+    model.scale.set(5, 5, 5);
+    scene.add(model);
+    enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
+}
+
+function loadKincir(x, z) {
+  const kincirUrl = new URL("/assets/glb/kincir.glb", import.meta.url);
+
+  loader.load(kincirUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(180 + x, 0, -14 + z);
+    model.scale.set(7, 7, 7);
+    model.rotateY(-Math.PI / 2);
+
+    // Create a group for the entire windmill
+    let windmillGroup = new THREE.Group();
+    windmillGroup.add(model);
+    scene.add(windmillGroup);
+
+    let balingMesh;
+    let bodyMesh;
+    let balingGroup = new THREE.Group();
+
+    model.traverse(function (child) {
+      if (child.isMesh && child.name.toLowerCase().includes("blade")) {
+        balingMesh = child;
+      } else {
+        bodyMesh = child;
+      }
+
+      objects.push(child);
+    });
+
+    if (balingMesh) {
+      // Pindahkan baling-baling ke pusat
+      const bladeColor = new THREE.Color(0xff0013); // Green color, you can change this
+      const bladeMaterial = new THREE.MeshStandardMaterial({
+        color: bladeColor,
+      });
+      balingMesh.material = bladeMaterial;
+
+      balingMesh.geometry.computeBoundingBox();
+      const boundingBox = balingMesh.geometry.boundingBox;
+      const center = new THREE.Vector3();
+      boundingBox.getCenter(center);
+      balingMesh.position.sub(center);
+
+      balingGroup.add(balingMesh);
+      model.add(balingGroup);
+
+      // Sesuaikan posisi grup baling-baling ke posisi pusat kincir angin
+      balingGroup.position.copy(center);
+
+      let animationTime = 0;
+
+      function animateBalingBaling() {
+        const rotationSpeed = 0.01; // Kecepatan rotasi
+        animationTime += rotationSpeed;
+        balingGroup.rotation.z = animationTime;
+        requestAnimationFrame(animateBalingBaling);
+      }
+
+      animateBalingBaling();
+    }
+
+    if (bodyMesh) {
+      const bladeColor = new THREE.Color(0xffffcc); // Green color, you can change this
+      const bladeMaterial = new THREE.MeshStandardMaterial({
+        color: bladeColor,
+      });
+      bodyMesh.material = bladeMaterial;
+    }
+  });
+  const benchUrl = new URL("/assets/glb/park_bench.glb", import.meta.url);
+
+
+  // BENcH 1
+  loader.load(benchUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(180 + x, 2 , 15 +z);
+    model.scale.set(7, 7, 7);
+    // model.rotateY(  Math.PI/2)
+    scene.add(model);
+    enableBackfaceCullingForModel(model);
+
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
+
+  //BENCH 2
+  loader.load(benchUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(180 + x, 2 , -40 +z);
+    model.scale.set(7, 7, 7);
+    // model.rotateY(  Math.PI/2)
+    scene.add(model);
+    enableBackfaceCullingForModel(model);
+
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
+
+  const treeUrl = new URL("/assets/gltf/NormalTree_1.gltf", import.meta.url);
+  const leafTexture = new THREE.TextureLoader().load(
+    "./assets/img/NormalTree_Leaves.png"
+  );
+
+  const barkTexture = new THREE.TextureLoader().load(
+    "./assets/img/NormalTree_Bark.png"
+  );
+
+
+  loader.load(treeUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(200 + x, 0, -35 + z);
+    model.scale.set(4, 4, 4);
+    model.rotateY(Math.PI);
+    scene.add(model);
+
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        if (child.name === "Cylinder001_1") {
+          // Assign leaf texture
+          child.material.map = leafTexture;
+          child.material.emissive = new THREE.Color(0x00ff00); // Put your color here
+          child.material.emissiveIntensity = 0.08; // Adjust intensity as needed
+
+          console.log("Leaf texture applied");
+        } else {
+          child.material.map = barkTexture;
+          console.log("Bark texture applied");
+        }
+        child.material.needsUpdate = true;
+      }
+    });
+  });
+
+  loader.load(treeUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(200 + x, 0, 10 + z);
+    model.scale.set(4, 4, 4);
+    model.rotateY(Math.PI);
+    scene.add(model);
+
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        if (child.name === "Cylinder001_1") {
+          // Assign leaf texture
+          child.material.map = leafTexture;
+          child.material.emissive = new THREE.Color(0x00ff00); // Put your color here
+          child.material.emissiveIntensity = 0.08; // Adjust intensity as needed
+
+          console.log("Leaf texture applied");
+        } else {
+          child.material.map = barkTexture;
+          console.log("Bark texture applied");
+        }
+        child.material.needsUpdate = true;
+      }
+    });
+  });
+}
+
 function setFloor() {
-  let ukuran = 20;
+  let ukuran = 10;
   let floorGeometry = new THREE.PlaneGeometry(ukuran, ukuran);
   floorGeometry.rotateX(-Math.PI / 2);
   const texture = new THREE.TextureLoader().load(
@@ -504,10 +722,10 @@ function setFloor() {
   );
   const floorMaterial = new THREE.MeshBasicMaterial({ map: texture });
 
-  let jumlahUbin = 100;
+  let jumlahUbin = 10;
   let ukuranLantai = ukuran * jumlahUbin;
-  for (let i = -ukuranLantai; i < ukuranLantai; i += ukuran) {
-    for (let j = -ukuranLantai; j < ukuranLantai; j += ukuran) {
+  for (let i = -ukuranLantai ; i < ukuranLantai; i += ukuran) {
+    for (let j = -ukuranLantai ; j < ukuranLantai; j += ukuran) {
       const floor = new THREE.Mesh(floorGeometry, floorMaterial);
       scene.add(floor);
       floor.position.set(i, 0, j);
@@ -550,17 +768,14 @@ function walkRandomDirection(model, mixer, clip) {
 
     const move = () => {
       if (shibaSprint) {
-        model.position.x += randomDirection.x * 1.2; // Adjust speed as necessary
-        model.position.z += randomDirection.z * 1.2; // Adjust speed as necessary
-    
-        // Set shibaSprint to false after 2 seconds
+        model.position.x += randomDirection.x * 1.2;
+        model.position.z += randomDirection.z * 1.2;
+
         setTimeout(() => {
           shibaSprint = false;
         }, 3000);
-    
-        // Check constraints and stop movement if out of bounds
+
         if (model.position.x > 120 || model.position.x < -30) {
-          // Adjust position to stay within bounds
           model.position.x = Math.min(Math.max(model.position.x, -30), 120);
           // Generate a new random direction
           walkRandomDirection(model, mixer, clip);
@@ -568,16 +783,12 @@ function walkRandomDirection(model, mixer, clip) {
           // Continue moving
           requestAnimationFrame(move);
         }
-    
       } else {
-        model.position.x += randomDirection.x * 0.3; // Adjust speed as necessary
-        model.position.z += randomDirection.z * 0.3; // Adjust speed as necessary
-    
-        // Check constraints and stop movement if out of bounds
+        model.position.x += randomDirection.x * 0.3;
+        model.position.z += randomDirection.z * 0.3;
+
         if (model.position.x > 120 || model.position.x < -30) {
-          // Adjust position to stay within bounds
           model.position.x = Math.min(Math.max(model.position.x, -30), 120);
-          // Generate a new random direction
           walkRandomDirection(model, mixer, clip);
         } else {
           // Continue moving
@@ -585,10 +796,10 @@ function walkRandomDirection(model, mixer, clip) {
         }
       }
     };
-    
+
     // Start the movement
     move();
-    } else {
+  } else {
     console.error("Animation mixer not initialized!");
   }
 }
@@ -605,7 +816,11 @@ function checkCollision() {
   return false;
 }
 function isNearLawnMower() {
-  const lawnMowerPosition = new THREE.Vector3(lawnMower.position.x, lawnMower.position.y, lawnMower.position.z);
+  const lawnMowerPosition = new THREE.Vector3(
+    lawnMower.position.x,
+    lawnMower.position.y,
+    lawnMower.position.z
+  );
   const playerPosition = controls.getObject().position;
   const distance = playerPosition.distanceTo(lawnMowerPosition);
   const threshold = 10; // Distance threshold to consider "near"
@@ -616,7 +831,11 @@ function isNearLawnMower() {
   return false;
 }
 function isNearShiba() {
-  const shibaPosition = new THREE.Vector3(shiba.position.x, shiba.position.y, shiba.position.z);
+  const shibaPosition = new THREE.Vector3(
+    shiba.position.x,
+    shiba.position.y,
+    shiba.position.z
+  );
   const playerPosition = controls.getObject().position;
   const distance = playerPosition.distanceTo(shibaPosition);
   console.log(distance);
@@ -636,7 +855,7 @@ const sound = new THREE.Audio(listener);
 
 // Load a sound and set it as the Audio object's buffer
 const audioLoader = new THREE.AudioLoader();
-audioLoader.load('assets/sound/lawnmower.mp3', function(buffer) {
+audioLoader.load("assets/sound/lawnmower.mp3", function (buffer) {
   sound.setBuffer(buffer);
   sound.setLoop(true); // Set to true if you want the music to loop
   sound.setVolume(0.05); // Adjust volume as needed
@@ -652,7 +871,11 @@ function animate() {
   if (controls.isLocked === true) {
     if (isInteractive) {
       // Update camera position behind the lawn mower
-      const lawnMowerPosition = new THREE.Vector3(lawnMower.position.x, lawnMower.position.y, lawnMower.position.z);
+      const lawnMowerPosition = new THREE.Vector3(
+        lawnMower.position.x,
+        lawnMower.position.y,
+        lawnMower.position.z
+      );
       const offset = new THREE.Vector3(0, 5, -7); // Adjust the offset as needed
       camera.position.copy(lawnMowerPosition).add(offset);
       // camera.lookAt(lawnMowerPosition);
@@ -660,19 +883,19 @@ function animate() {
         sound.play();
       }
       // Move the lawn_mower along with the camera (player movement)
-    if (moveForward) {
-      // Move lawn_mower forward
-      lawnMower.position.z -= velocity.z * delta;
-    } else if (moveBackward) {
-      // Move lawn_mower backward
-      lawnMower.position.z -= velocity.z * delta;
-    } else if (moveLeft) {
-      // Move lawn_mower forward
-      lawnMower.position.x += velocity.x * delta;
-    } else if (moveRight) {
-      // Move lawn_mower backward
-      lawnMower.position.x += velocity.x * delta;
-    }
+      if (moveForward) {
+        // Move lawn_mower forward
+        lawnMower.position.z -= velocity.z * delta;
+      } else if (moveBackward) {
+        // Move lawn_mower backward
+        lawnMower.position.z -= velocity.z * delta;
+      } else if (moveLeft) {
+        // Move lawn_mower forward
+        lawnMower.position.x += velocity.x * delta;
+      } else if (moveRight) {
+        // Move lawn_mower backward
+        lawnMower.position.x += velocity.x * delta;
+      }
     } else {
       if (sound.isPlaying) {
         sound.stop();
@@ -740,11 +963,11 @@ function animate() {
     }
 
     // Rotate the rotor model
-    if (rotorModel && rotorModel2 && rotorModel3) {
-      rotorModel.rotation.z += 0.09; // Adjust the rotation speed as needed
-      rotorModel2.rotation.z += 0.09; // Adjust the rotation speed as needed
-      rotorModel3.rotation.z += 0.09; // Adjust the rotation speed as needed
-    }
+    // if (rotorModel && rotorModel2 && rotorModel3) {
+    //   rotorModel.child.rotation.z += 0.01; // Adjust the rotation speed as needed
+    //   rotorModel2.rotation.z += 0.01; // Adjust the rotation speed as needed
+    //   rotorModel3.rotation.z += 0.01; // Adjust the rotation speed as needed
+    // }
 
     prevTime = time;
     renderer.render(scene, camera);
