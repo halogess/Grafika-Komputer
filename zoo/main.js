@@ -24,6 +24,7 @@ let mixer,
   mixerDonkey,
   mixerDonkey2,
   mixerDonkey3,
+  mixerDonkey4,
   mixerShiba,
   mixerAlpaca,
   mixerAlpaca2,
@@ -34,9 +35,6 @@ let mixer,
   mixerStag,
   mixerStag2,
   mixerStag3,
-  rotorModel,
-  rotorModel2,
-  rotorModel3,
   cameraBoundingSphere,
   lawnMower,
   shiba;
@@ -208,9 +206,13 @@ function loadDonkey() {
     // Create the animation mixer for the donkey
     mixerDonkey = new THREE.AnimationMixer(model);
     const clips = gltf.animations;
-
+  // Log all animation clips
+  console.log("Available animation clips:", clips);
+  clips.forEach((clip, index) => {
+    console.log(`Clip ${index}:`, clip.name);
+  });
     // Find and play the 'Eating' animation
-    const eatingClip = THREE.AnimationClip.findByName(clips, "Eating");
+    const eatingClip = THREE.AnimationClip.findByName(clips, "Idle_2");
     if (eatingClip) {
       const action = mixerDonkey.clipAction(eatingClip);
       action.loop = THREE.LoopRepeat;
@@ -270,6 +272,33 @@ function loadDonkey() {
     const eatingClip = THREE.AnimationClip.findByName(clips, "Eating");
     if (eatingClip) {
       const action = mixerDonkey3.clipAction(eatingClip);
+      action.loop = THREE.LoopRepeat;
+      action.clampWhenFinished = true;
+      action.play();
+    } else {
+      console.error("Eating animation clip not found for Donkey!");
+    }
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
+  loader.load(donkeyUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(60, 0,-50);
+    model.scale.set(2.5, 2.5, 2.5);
+    model.rotateY(-Math.PI/2);
+    scene.add(model);
+    enableBackfaceCullingForModel(model);
+    // Create the animation mixer for the donkey
+    mixerDonkey4 = new THREE.AnimationMixer(model);
+    const clips = gltf.animations;
+
+    // Find and play the 'Eating' animation
+    const eatingClip = THREE.AnimationClip.findByName(clips, "Attack_Headbutt");
+    if (eatingClip) {
+      const action = mixerDonkey4.clipAction(eatingClip);
       action.loop = THREE.LoopRepeat;
       action.clampWhenFinished = true;
       action.play();
@@ -559,47 +588,15 @@ if (eatingClip) {
 }
 
 function loadModels() {
-  const deerUrl = new URL("/assets/gltf/animals/Deer.gltf", import.meta.url);
-  const foxUrl = new URL("/assets/gltf/animals/Fox.gltf", import.meta.url);
   const shibaUrl = new URL(
     "/assets/gltf/animals/ShibaInu.gltf",
     import.meta.url
   );
-  const wolfUrl = new URL("/assets/gltf/animals/Wolf.gltf", import.meta.url);
 
   loadDonkey();
   loadAlpaca();
   loadHorse();
   loadStag();
-
-  loader.load(deerUrl.href, function (gltf) {
-    const model = gltf.scene;
-    model.position.set(15, 0, 10);
-    model.scale.set(3, 3, 3);
-    scene.add(model);
-
-    enableBackfaceCullingForModel(model); // Enable backface culling for the deer model
-
-    // Create the animation mixer for the deer
-    mixer = new THREE.AnimationMixer(model);
-    const clips = gltf.animations;
-
-    // Find and play the 'Idle_2' animation
-    const idleClip = THREE.AnimationClip.findByName(clips, "Idle_2");
-    if (idleClip) {
-      const action = mixer.clipAction(idleClip);
-      action.loop = THREE.LoopRepeat;
-      action.play();
-    } else {
-      console.error("Idle_2 animation clip not found for Deer!");
-    }
-
-    model.traverse(function (child) {
-      if (child.isMesh) {
-        objects.push(child);
-      }
-    });
-  });
   
   loader.load(shibaUrl.href, function (gltf) {
     shiba = gltf.scene;
@@ -622,20 +619,6 @@ function loadModels() {
       console.error("Walk animation clip not found for Shiba!");
     }
     shiba.traverse(function (child) {
-      if (child.isMesh) {
-        objects.push(child);
-      }
-    });
-  });
-
-  loader.load(wolfUrl.href, function (gltf) {
-    const model = gltf.scene;
-    model.position.set(20, 0, 10);
-    model.scale.set(3, 3, 3);
-    scene.add(model);
-    enableBackfaceCullingForModel(model);
-
-    model.traverse(function (child) {
       if (child.isMesh) {
         objects.push(child);
       }
@@ -1246,28 +1229,29 @@ function animate() {
     if (mixer) {
       mixer.update(delta); // Update the deer's animation mixer
     }
-    if (mixerDonkey && mixerDonkey2 && mixerDonkey3) {
+    if (mixerDonkey && mixerDonkey2 && mixerDonkey3 && mixerDonkey4) {
       mixerDonkey.update(delta); // Update the donkey's animation mixer
-      mixerDonkey2.update(delta); // Update the donkey's animation mixer
-      mixerDonkey3.update(delta); // Update the donkey's animation mixer
+      mixerDonkey2.update(delta*0.5); // Update the donkey's animation mixer
+      mixerDonkey3.update(delta*0.8); // Update the donkey's animation mixer
+      mixerDonkey4.update(delta*0.6); // Update the donkey's animation mixer
     }
     if (mixerShiba) {
       mixerShiba.update(delta); // Update the shiba's animation mixer
     }
     if (mixerAlpaca && mixerAlpaca2 && mixerAlpaca3) {
       mixerAlpaca.update(delta); // Update the shiba's animation mixer
-      mixerAlpaca2.update(delta); // Update the shiba's animation mixer
-      mixerAlpaca3.update(delta); // Update the shiba's animation mixer
+      mixerAlpaca2.update(delta*0.5); // Update the shiba's animation mixer
+      mixerAlpaca3.update(delta*0.7); // Update the shiba's animation mixer
     }
     if (mixerHorse && mixerHorse2 && mixerHorse3) {
       mixerHorse.update(delta); // Update the shiba's animation mixer
-      mixerHorse2.update(delta); // Update the shiba's animation mixer
-      mixerHorse3.update(delta); // Update the shiba's animation mixer
+      mixerHorse2.update(delta*0.4); // Update the shiba's animation mixer
+      mixerHorse3.update(delta*0.6); // Update the shiba's animation mixer
     }
     if (mixerStag && mixerStag2 && mixerStag3) {
       mixerStag.update(delta); // Update the shiba's animation mixer
-      mixerStag2.update(delta); // Update the shiba's animation mixer
-      mixerStag3.update(delta); // Update the shiba's animation mixer
+      mixerStag2.update(delta*0.7); // Update the shiba's animation mixer
+      mixerStag3.update(delta*0.5); // Update the shiba's animation mixer
     }
 
     prevTime = time;
