@@ -23,6 +23,9 @@ const loader = new GLTFLoader();
 let mixer,
   mixerDonkey,
   mixerShiba,
+  mixerAlpaca,
+  mixerHorse,
+  mixerStag,
   rotorModel,
   rotorModel2,
   rotorModel3,
@@ -249,6 +252,200 @@ function loadDonkey() {
     });
   });
 }
+function loadAlpaca() {
+  const alpacaUrl = new URL(
+    "/assets/gltf/animals/Alpaca.gltf",
+    import.meta.url
+  );
+
+  loader.load(alpacaUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(75, 0, -100);
+    model.scale.set(3, 3, 3);
+    scene.add(model);
+    enableBackfaceCullingForModel(model); // Enable backface culling for the donkey model
+
+    // Create the animation mixer for the donkey
+    mixerAlpaca = new THREE.AnimationMixer(model);
+    const clips = gltf.animations;
+
+    // Find and play the 'Eating' animation
+    const eatingClip = THREE.AnimationClip.findByName(clips, "Eating");
+    if (eatingClip) {
+      const action = mixerAlpaca.clipAction(eatingClip);
+      action.loop = THREE.LoopRepeat;
+      action.clampWhenFinished = true;
+      action.play();
+    } else {
+      console.error("Eating animation clip not found for Alpaca!");
+    }
+
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
+
+  loader.load(alpacaUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(80, 0, -120);
+    model.scale.set(3, 3, 3);
+    scene.add(model);
+    enableBackfaceCullingForModel(model);
+
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
+
+  // donkey 2
+  loader.load(alpacaUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(50, 0, -105);
+    model.scale.set(2.5, 2.5, 2.5);
+    model.rotateY(Math.PI);
+    scene.add(model);
+    enableBackfaceCullingForModel(model);
+
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
+}
+function loadHorse() {
+  const horseUrl = new URL(
+    "/assets/gltf/animals/Horse.gltf",
+    import.meta.url
+  );
+
+  loader.load(horseUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(-20, 0, -100);
+    model.scale.set(3, 3, 3);
+    scene.add(model);
+    enableBackfaceCullingForModel(model); // Enable backface culling for the donkey model
+
+    // Create the animation mixer for the donkey
+    mixerHorse = new THREE.AnimationMixer(model);
+    const clips = gltf.animations;
+
+    // Find and play the 'Eating' animation
+    const eatingClip = THREE.AnimationClip.findByName(clips, "Eating");
+    if (eatingClip) {
+      const action = mixerHorse.clipAction(eatingClip);
+      action.loop = THREE.LoopRepeat;
+      action.clampWhenFinished = true;
+      action.play();
+    } else {
+      console.error("Eating animation clip not found for Alpaca!");
+    }
+
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
+
+  loader.load(horseUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(-10, 0, -120);
+    model.scale.set(3, 3, 3);
+    scene.add(model);
+    enableBackfaceCullingForModel(model);
+
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
+
+  // donkey 2
+  loader.load(horseUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(0, 0, -105);
+    model.scale.set(2.5, 2.5, 2.5);
+    model.rotateY(Math.PI);
+    scene.add(model);
+    enableBackfaceCullingForModel(model);
+
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
+}
+function loadStag() {
+  const stagUrl = new URL(
+    "/assets/gltf/animals/Stag.gltf",
+    import.meta.url
+  );
+  loader.load(stagUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(-20, 0, -20);
+    model.scale.set(3, 3, 3);
+    scene.add(model);
+    enableBackfaceCullingForModel(model); // Enable backface culling for the donkey model
+
+    // Create the animation mixer for the donkey
+    mixerStag = new THREE.AnimationMixer(model);
+    const clips = gltf.animations;
+
+    // Find and play the 'Eating' animation
+    const eatingClip = THREE.AnimationClip.findByName(clips, "Eating");
+    if (eatingClip) {
+      const action = mixerStag.clipAction(eatingClip);
+      action.loop = THREE.LoopRepeat;
+      action.clampWhenFinished = true;
+      action.play();
+    } else {
+      console.error("Eating animation clip not found for Alpaca!");
+    }
+
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
+
+  loader.load(stagUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(-10, 0, -40);
+    model.scale.set(3, 3, 3);
+    scene.add(model);
+    enableBackfaceCullingForModel(model);
+
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
+
+  // donkey 2
+  loader.load(stagUrl.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(0, 0, -20);
+    model.scale.set(2.5, 2.5, 2.5);
+    model.rotateY(Math.PI);
+    scene.add(model);
+    enableBackfaceCullingForModel(model);
+
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
+}
 
 function loadModels() {
   const deerUrl = new URL("/assets/gltf/animals/Deer.gltf", import.meta.url);
@@ -260,6 +457,9 @@ function loadModels() {
   const wolfUrl = new URL("/assets/gltf/animals/Wolf.gltf", import.meta.url);
 
   loadDonkey();
+  loadAlpaca();
+  loadHorse();
+  loadStag();
 
   loader.load(deerUrl.href, function (gltf) {
     const model = gltf.scene;
@@ -714,7 +914,7 @@ function loadKincir(x, z) {
 }
 
 function setFloor() {
-  let ukuran = 10;
+  let ukuran = 30;
   let floorGeometry = new THREE.PlaneGeometry(ukuran, ukuran);
   floorGeometry.rotateX(-Math.PI / 2);
   const texture = new THREE.TextureLoader().load(
@@ -858,7 +1058,7 @@ const audioLoader = new THREE.AudioLoader();
 audioLoader.load("assets/sound/lawnmower.mp3", function (buffer) {
   sound.setBuffer(buffer);
   sound.setLoop(true); // Set to true if you want the music to loop
-  sound.setVolume(0.05); // Adjust volume as needed
+  sound.setVolume(0.2); // Adjust volume as needed
   if (isInteractive) {
     sound.play();
   }
@@ -961,13 +1161,15 @@ function animate() {
     if (mixerShiba) {
       mixerShiba.update(delta); // Update the shiba's animation mixer
     }
-
-    // Rotate the rotor model
-    // if (rotorModel && rotorModel2 && rotorModel3) {
-    //   rotorModel.child.rotation.z += 0.01; // Adjust the rotation speed as needed
-    //   rotorModel2.rotation.z += 0.01; // Adjust the rotation speed as needed
-    //   rotorModel3.rotation.z += 0.01; // Adjust the rotation speed as needed
-    // }
+    if (mixerAlpaca) {
+      mixerAlpaca.update(delta); // Update the shiba's animation mixer
+    }
+    if (mixerHorse) {
+      mixerHorse.update(delta); // Update the shiba's animation mixer
+    }
+    if (mixerStag) {
+      mixerStag.update(delta); // Update the shiba's animation mixer
+    }
 
     prevTime = time;
     renderer.render(scene, camera);
