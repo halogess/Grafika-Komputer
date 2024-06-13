@@ -52,11 +52,11 @@ function init() {
   );
 
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0xffffff);
+  scene.background = new THREE.Color(0xB0E0E6);
   scene.fog = new THREE.Fog(0xffffff, 0, 750);
 
   const light = new THREE.DirectionalLight(0xffffff, 1);
-  light.position.set(5, 10, 7.5).normalize();
+  light.position.set(0, 700, 0).normalize();
   scene.add(light);
 
   const hemilight = new THREE.HemisphereLight(0xeeeeff, 0x777788, 1);
@@ -637,9 +637,29 @@ function loadProp() {
     import.meta.url
   );
 
+  const matahariURL = new URL(
+    "/assets/glb/sun.glb",
+    import.meta.url
+  );
+
   loadKincir(0, 0);
   loadKincir(0, -80);
   loadKincir(0, -160);
+
+  
+  loader.load(matahariURL.href, function (gltf) {
+    const model = gltf.scene;
+    model.position.set(0, 700, 0);
+    model.scale.set(3, 3, 3);
+    scene.add(model);
+    enableBackfaceCullingForModel(model);
+    
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        objects.push(child);
+      }
+    });
+  });
 
 
   loader.load(lawn_mower.href, function (gltf) {
